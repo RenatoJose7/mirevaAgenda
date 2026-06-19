@@ -1,0 +1,229 @@
+"use client";
+
+import { useState } from "react";
+import { Eye, Settings } from "lucide-react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { AuthNotice } from "@/components/auth-notice";
+import { AdminShell } from "@/components/admin-shell";
+import { SectionHeading } from "@/components/section-heading";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import type { AppBusiness } from "@/lib/auth/server";
+import { slugify } from "@/lib/business/types";
+import { createClient } from "@/lib/supabase/client";
+import { themes } from "@/lib/themes";
+import { cn } from "@/lib/utils";
+
+const schema = z.object({
+  name: z.string().min(2, "Informe o nome do estabelecimento."),
+  slug: z
+    .string()
+    .min(2, "Informe um slug.")
+    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Use apenas letras, numeros e hifens."),
+  segment: z.string().optional(),
+  whatsapp: z.string().optional(),
+  address: z.string().optional(),
+});
+
+type SettingsForm = z.infer<typeof schema>;
+
+export function SettingsView({ business }: { business: AppBusiness }) {
+  const [theme, setTheme] = useState(business.theme_key || "mireva");
+  const [mode, setMode] = useState(business.booking_confirmation_mode);
+  const [businessName, setBusinessName] = useState(business.name);
+  const [businessAddress, setBusinessAddress] = useState(business.address ?? "");
+  const [publicSlug, setPublicSlug] = useState(business.slug);
+  const [message, setMessage] = useState<{ type: "error" | "success"; text: string } | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const selected = themes.find((item) => item.id === theme) ?? themes[0];
+  const form = useForm<SettingsForm>({
+    resolver: zodResolver(schema),
+    defaultValues: {
+      name: business.name,
+      slug: business.slug,
+      segment: business.segment ?? "",
+      whatsapp: business.whatsapp ?? "",
+      address: business.address ?? "",
+    },
+  });
+
+  async function handleSave(values: SettingsForm) {
+    setIsSubmitting(true);
+    setMessage(null);
+
+    try {
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from("businesses")
+        .update({
+          name: values.name.trim(),
+          slug: values.slug.trim(),
+          segment: values.segment?.trim() || null,
+          whatsapp: values.whatsapp?.trim() || null,
+          address: values.address?.trim() || null,
+          theme_key: theme,
+          booking_confirmation_mode: mode,
+        })
+        .eq("id", business.id)
+        .select("name,address")
+        .single();
+
+      if (error) {
+        setMessage({
+          type: "error",
+          text: error.code === "23505"
+            ? "Este slug ja esta em uso. Escolha outro."
+            : "Nao foi possivel salvar as configuracoes.",
+        });
+        return;
+      }
+
+      setBusinessName(data.name);
+      setBusinessAddress(data.address ?? "");
+      setPublicSlug(values.slug.trim());
+      setMessage({ type: "success", text: "Configuracoes salvas com sucesso." });
+    } catch {
+      setMessage({ type: "error", text: "Supabase nao configurado ou sessao expirada." });
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  return (
+    <AdminShell
+      title="Configuracoes"
+      description="Dados reais do estabelecimento e preferencias visuais."
+      businessName={businessName}
+      themeKey={theme}
+    >
+      <div className="grid gap-6 lg:grid-cols-[1fr_0.9fr]">
+        <Card>
+          <CardContent className="space-y-5 p-5">
+            <SectionHeading title="Dados do estabelecimento" icon={Settings} />
+            {message && <AuthNotice type={message.type} message={message.text} />}
+            <form id="settings-form" className="grid gap-4 sm:grid-cols-2" onSubmit={form.handleSubmit(handleSave)}>
+              <div className="space-y-2">
+                <Label htmlFor="business-name">Nome</Label>
+                <Input
+                  id="business-name"
+                  {...form.register("name")}
+                  onBlur={(event) => {
+                    if (!form.getValues("slug")) {
+                      form.setValue("slug", slugify(event.target.value));
+                    }
+                  }}
+                />
+                {form.formState.errors.name && (
+                  <p className="text-sm text-destructive">{form.formState.errors.name.message}</p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="business-slug">Slug publico</Label>
+                <Input id="business-slug" {...form.register("slug")} />
+                {form.formState.errors.slug && (
+                  <p className="text-sm text-destructive">{form.formState.errors.slug.message}</p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="business-segment">Segmento</Label>
+                <Input id="business-segment" {...form.register("segment")} placeholder="Ex: consultoria, educacao, saude" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="business-whatsapp">WhatsApp</Label>
+                <Input id="business-whatsapp" {...form.register("whatsapp")} />
+              </div>
+              <div className="space-y-2 sm:col-span-2">
+                <Label htmlFor="business-address">Endereco</Label>
+                <Input id="business-address" {...form.register("address")} />
+              </div>
+            </form>
+            <div className="rounded-lg border border-dashed bg-secondary p-5 text-sm text-muted-foreground">
+              Configuracoes do estabelecimento salvas no Supabase. Upload de logo e storage ficam para etapa futura.
+            </div>
+            <div className="rounded-lg border bg-white p-4 text-sm">
+              <p className="font-medium text-slate-950">Link publico de agendamento</p>
+              <p className="mt-1 break-all text-muted-foreground">/agendar/{publicSlug}</p>
+              <Button
+                className="mt-3"
+                type="button"
+                variant="outline"
+                onClick={() => navigator.clipboard.writeText(`${window.location.origin}/agendar/${publicSlug}`)}
+              >
+                Copiar link publico
+              </Button>
+            </div>
+            <Button type="submit" form="settings-form" disabled={isSubmitting}>
+              {isSubmitting ? "Salvando..." : "Salvar configuracoes"}
+            </Button>
+          </CardContent>
+        </Card>
+
+        <div className="space-y-6">
+          <Card>
+            <CardContent className="p-5">
+              <SectionHeading title="Temas prontos" />
+              <div className="mt-4 space-y-3">
+                {themes.map((option) => (
+                  <button
+                    key={option.id}
+                    type="button"
+                    onClick={() => setTheme(option.id)}
+                    className={cn(
+                      "flex w-full items-center justify-between rounded-lg border bg-white p-3 text-left",
+                      theme === option.id && "border-primary ring-2 ring-primary/15",
+                    )}
+                  >
+                    <span>
+                      <span className="font-medium text-slate-950">{option.name}</span>
+                      <span className="block text-sm text-muted-foreground">{option.description}</span>
+                    </span>
+                    <span className="flex gap-1">
+                      {option.colors.map((color) => (
+                        <span key={color} className="size-5 rounded-full border" style={{ backgroundColor: color }} />
+                      ))}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="space-y-4 p-5">
+              <SectionHeading title="Previa publica" icon={Eye} />
+              <div className="rounded-lg border bg-white p-5">
+                <div className="mb-4 flex gap-2">
+                  {selected.colors.map((color) => (
+                    <span key={color} className="h-2 flex-1 rounded-full" style={{ backgroundColor: color }} />
+                  ))}
+                </div>
+                <h3 className="text-xl font-semibold text-slate-950">{businessName}</h3>
+                <p className="mt-1 text-sm text-muted-foreground">{businessAddress || "Endereco nao informado"}</p>
+                <Button className="mt-5 w-full">Agendar horario</Button>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {[
+                  ["automatic", "Confirmacao automatica"],
+                  ["manual", "Aprovacao manual"],
+                ].map(([id, label]) => (
+                  <Button
+                    key={id}
+                    type="button"
+                    variant={mode === id ? "default" : "outline"}
+                    onClick={() => setMode(id as "automatic" | "manual")}
+                  >
+                    {label}
+                  </Button>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </AdminShell>
+  );
+}
