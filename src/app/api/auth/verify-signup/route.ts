@@ -4,7 +4,7 @@ import { z } from "zod";
 import { translateAuthError } from "@/lib/auth/messages";
 import { clearSupabaseAuthCookieStore } from "@/lib/supabase/cookies";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
-import { createClient } from "@/lib/supabase/server";
+import { createRouteClient } from "@/lib/supabase/route";
 
 export const dynamic = "force-dynamic";
 
@@ -27,7 +27,7 @@ export async function POST(request: Request) {
 
   clearSupabaseAuthCookieStore(await cookies());
 
-  const supabase = await createClient();
+  const { supabase, applyCookies } = await createRouteClient();
   const { error } = await supabase.auth.verifyOtp({
     email: parsed.data.email.trim().toLowerCase(),
     token: parsed.data.token,
@@ -35,8 +35,8 @@ export async function POST(request: Request) {
   });
 
   if (error) {
-    return NextResponse.json({ error: translateAuthError(error.message) }, { status: 401 });
+    return applyCookies(NextResponse.json({ error: translateAuthError(error.message) }, { status: 401 }));
   }
 
-  return NextResponse.json({ redirectTo: "/onboarding" });
+  return applyCookies(NextResponse.json({ redirectTo: "/onboarding" }));
 }
