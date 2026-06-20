@@ -1,10 +1,18 @@
 import Link from "next/link";
+import Image from "next/image";
+import logoAgenda from "../../assets/logoAgenda.png";
 
 export function BrandMark({ compact = false }: { compact?: boolean }) {
   return (
     <Link href="/" className="flex items-center gap-3">
-      <span className="grid size-10 place-items-center rounded-lg bg-primary text-sm font-bold text-primary-foreground shadow-sm">
-        M
+      <span className="grid size-10 place-items-center overflow-hidden rounded-lg bg-primary shadow-sm">
+        <Image
+          src={logoAgenda}
+          alt="Mireva Agenda"
+          className="size-full object-cover"
+          priority
+          sizes="40px"
+        />
       </span>
       {!compact && (
         <span className="leading-tight">
