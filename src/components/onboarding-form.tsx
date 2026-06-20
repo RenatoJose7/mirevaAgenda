@@ -2,21 +2,13 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Upload } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { AuthNotice } from "@/components/auth-notice";
+import { BusinessLogoField } from "@/components/business-logo-field";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -40,7 +32,8 @@ export function OnboardingForm() {
   const [mode, setMode] = useState<"automatic" | "manual">("automatic");
   const [message, setMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isLogoDialogOpen, setIsLogoDialogOpen] = useState(false);
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoPreviewUrl, setLogoPreviewUrl] = useState<string | null>(null);
   const themeStyle = useThemeStyle(theme);
   const form = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -77,6 +70,12 @@ export function OnboardingForm() {
         const payload = (await response.json().catch(() => null)) as { error?: string } | null;
         setMessage(getOnboardingErrorMessage(payload?.error ?? "Nao foi possivel criar o estabelecimento."));
         return;
+      }
+
+      if (logoFile) {
+        await uploadInitialLogo(logoFile).catch((error) => {
+          console.error("initial logo upload failed", error);
+        });
       }
 
       router.push("/dashboard");
@@ -120,17 +119,20 @@ export function OnboardingForm() {
               <Input id="business-address" {...form.register("address")} placeholder="Rua, numero - bairro" />
             </div>
           </div>
-          <div className="space-y-2">
-            <Label>Logo do estabelecimento</Label>
-            <button
-              type="button"
-              onClick={() => setIsLogoDialogOpen(true)}
-              className="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed bg-secondary px-4 py-8 text-sm font-medium text-muted-foreground"
-            >
-              <Upload className="size-4" />
-              Selecionar logo visual
-            </button>
-          </div>
+          <BusinessLogoField
+            label="Foto do estabelecimento"
+            logoUrl={logoPreviewUrl}
+            disabled={isSubmitting}
+            onLogoPrepared={(file, previewUrl) => {
+              setLogoFile(file);
+              setLogoPreviewUrl(previewUrl);
+            }}
+            onRemove={() => {
+              setLogoFile(null);
+              setLogoPreviewUrl(null);
+            }}
+            onError={setMessage}
+          />
           <div className="space-y-2">
             <Label htmlFor="business-note">Observacao interna</Label>
             <Textarea
@@ -193,26 +195,23 @@ export function OnboardingForm() {
         </div>
         </CardContent>
       </Card>
-      <Dialog open={isLogoDialogOpen} onOpenChange={setIsLogoDialogOpen}>
-        <DialogContent style={themeStyle}>
-          <DialogHeader>
-            <div className="mb-2 grid size-10 place-items-center rounded-lg bg-primary/10 text-primary">
-              <Upload className="size-5" />
-            </div>
-            <DialogTitle>Upload de logo ainda nao esta ativo</DialogTitle>
-            <DialogDescription>
-              Nesta etapa o cadastro do estabelecimento ja funciona, mas o envio real de logo e arquivos fica para uma etapa futura com storage configurado.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button type="button" onClick={() => setIsLogoDialogOpen(false)}>
-              Entendi
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
+}
+
+async function uploadInitialLogo(file: File) {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const response = await fetch("/api/business/logo", {
+    method: "POST",
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+    throw new Error(payload?.error ?? "Nao foi possivel enviar a foto.");
+  }
 }
 
 function getOnboardingErrorMessage(message: string) {

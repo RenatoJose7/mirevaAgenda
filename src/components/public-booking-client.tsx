@@ -30,6 +30,7 @@ type PublicData = {
     segment: string | null;
     whatsapp: string | null;
     address: string | null;
+    logo_url: string | null;
     theme_key: string;
     booking_confirmation_mode: "automatic" | "manual";
   };
@@ -196,8 +197,20 @@ export function PublicBookingClient({ slug }: { slug: string }) {
   return (
     <section className="mx-auto max-w-6xl px-4 py-8" style={themeStyle}>
       <div className="mb-8 max-w-3xl">
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Agendamento publico</p>
-        <h1 className="mt-2 text-3xl font-semibold text-slate-950 md:text-5xl">{data.business.name}</h1>
+        <div className="flex items-center gap-4">
+          {data.business.logo_url ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={data.business.logo_url} alt={data.business.name} className="size-16 rounded-xl border object-cover" />
+          ) : (
+            <div className="grid size-16 place-items-center rounded-xl bg-primary text-xl font-semibold text-primary-foreground">
+              {data.business.name.slice(0, 1).toUpperCase()}
+            </div>
+          )}
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Agendamento publico</p>
+            <h1 className="mt-2 text-3xl font-semibold text-slate-950 md:text-5xl">{data.business.name}</h1>
+          </div>
+        </div>
         <p className="mt-4 text-base leading-7 text-muted-foreground">
           Escolha servico, profissional, data e horario. O cliente final nao precisa criar conta.
         </p>
@@ -338,7 +351,17 @@ export function PublicBookingClient({ slug }: { slug: string }) {
             <Card className="border-primary/20 shadow-xl shadow-primary/10">
               <CardContent className="space-y-5 p-5">
                 <Badge variant="secondary">Resumo</Badge>
-                <h2 className="text-2xl font-semibold text-slate-950">{data.business.name}</h2>
+                <div className="flex items-center gap-3">
+                  {data.business.logo_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={data.business.logo_url} alt={data.business.name} className="size-12 rounded-lg border object-cover" />
+                  ) : (
+                    <div className="grid size-12 place-items-center rounded-lg bg-primary text-sm font-semibold text-primary-foreground">
+                      {data.business.name.slice(0, 1).toUpperCase()}
+                    </div>
+                  )}
+                  <h2 className="text-2xl font-semibold text-slate-950">{data.business.name}</h2>
+                </div>
                 <p className="text-sm text-muted-foreground">{data.business.address || "Endereco nao informado"}</p>
                 <div className="rounded-lg bg-secondary p-4 text-sm">
                   <p><strong>Servico:</strong> {data.services.find((item) => item.id === serviceId)?.name || "-"}</p>

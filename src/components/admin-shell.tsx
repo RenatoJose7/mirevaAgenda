@@ -61,6 +61,7 @@ export function AdminShell({
   title,
   description,
   businessName,
+  businessLogoUrl,
   themeKey,
   unreadCount = 0,
   children,
@@ -68,6 +69,7 @@ export function AdminShell({
   title: string;
   description: string;
   businessName: string;
+  businessLogoUrl?: string | null;
   themeKey?: string | null;
   unreadCount?: number;
   children: React.ReactNode;
@@ -107,6 +109,14 @@ export function AdminShell({
                   <NavList />
                 </SheetContent>
               </Sheet>
+              {businessLogoUrl && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={businessLogoUrl}
+                  alt={businessName}
+                  className="hidden size-11 rounded-lg border object-cover sm:block"
+                />
+              )}
               <div>
                 <p className="text-xs font-medium uppercase tracking-[0.18em] text-primary">
                   {businessName}

@@ -9,6 +9,8 @@ export type AppBusiness = {
   segment: string | null;
   whatsapp: string | null;
   address: string | null;
+  logo_url: string | null;
+  logo_path: string | null;
   theme_key: string;
   booking_confirmation_mode: "automatic" | "manual";
 };
@@ -56,7 +58,7 @@ export async function getCurrentBusiness(userId?: string): Promise<AppBusiness |
 
   const { data: business } = await supabase
     .from("businesses")
-    .select("id,name,slug,segment,whatsapp,address,theme_key,booking_confirmation_mode")
+    .select("id,name,slug,segment,whatsapp,address,logo_url,logo_path,theme_key,booking_confirmation_mode")
     .eq("id", membership.business_id)
     .maybeSingle();
 

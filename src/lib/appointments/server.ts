@@ -21,6 +21,7 @@ export type PublicBookingData = {
     segment: string | null;
     whatsapp: string | null;
     address: string | null;
+    logo_url: string | null;
     theme_key: string;
     booking_confirmation_mode: "automatic" | "manual";
   };
@@ -34,7 +35,7 @@ export async function getPublicBookingData(slug: string): Promise<PublicBookingD
   const supabase = createAdminClient();
   const { data: business, error: businessError } = await supabase
     .from("businesses")
-    .select("id,name,slug,segment,whatsapp,address,theme_key,booking_confirmation_mode")
+    .select("id,name,slug,segment,whatsapp,address,logo_url,theme_key,booking_confirmation_mode")
     .eq("slug", slug)
     .maybeSingle();
 

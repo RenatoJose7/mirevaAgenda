@@ -12,6 +12,7 @@ type Result = {
   slug: string;
   segment: string | null;
   address: string | null;
+  logoUrl: string | null;
 };
 
 export function PublicBusinessSearch() {
@@ -79,10 +80,20 @@ export function PublicBusinessSearch() {
           {!isLoading &&
             visibleResults.map((business) => (
               <div key={business.slug} className="flex flex-col gap-3 rounded-lg border bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <p className="font-semibold text-slate-950">{business.name}</p>
-                  <p className="text-sm text-muted-foreground">{business.segment || "Agendamento por horario marcado"}</p>
-                  {business.address && <p className="mt-1 text-xs text-muted-foreground">{business.address}</p>}
+                <div className="flex min-w-0 items-center gap-3">
+                  {business.logoUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={business.logoUrl} alt={business.name} className="size-12 rounded-lg border object-cover" />
+                  ) : (
+                    <div className="grid size-12 shrink-0 place-items-center rounded-lg bg-primary text-sm font-semibold text-primary-foreground">
+                      {business.name.slice(0, 1).toUpperCase()}
+                    </div>
+                  )}
+                  <div className="min-w-0">
+                    <p className="truncate font-semibold text-slate-950">{business.name}</p>
+                    <p className="text-sm text-muted-foreground">{business.segment || "Agendamento por horario marcado"}</p>
+                    {business.address && <p className="mt-1 text-xs text-muted-foreground">{business.address}</p>}
+                  </div>
                 </div>
                 <Button asChild>
                   <Link href={`/agendar/${business.slug}`}>Agendar</Link>

@@ -9,6 +9,7 @@ type PublicBusinessResult = {
   slug: string;
   segment: string | null;
   address: string | null;
+  logo_url: string | null;
 };
 
 export async function GET(request: Request) {
@@ -22,7 +23,7 @@ export async function GET(request: Request) {
   const supabase = createAdminClient();
   const { data: businesses, error } = await supabase
     .from("businesses")
-    .select("id,name,slug,segment,address")
+    .select("id,name,slug,segment,address,logo_url")
     .or(`name.ilike.%${term}%,segment.ilike.%${term}%`)
     .order("name", { ascending: true })
     .limit(12);
@@ -50,6 +51,7 @@ export async function GET(request: Request) {
       slug: business.slug,
       segment: business.segment,
       address: business.address,
+      logoUrl: business.logo_url,
     }));
 
   return NextResponse.json({ results });

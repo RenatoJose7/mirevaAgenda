@@ -7,6 +7,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { AuthNotice } from "@/components/auth-notice";
 import { AdminShell } from "@/components/admin-shell";
+import { BusinessLogoField } from "@/components/business-logo-field";
 import { SectionHeading } from "@/components/section-heading";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -36,9 +37,11 @@ export function SettingsView({ business }: { business: AppBusiness }) {
   const [mode, setMode] = useState(business.booking_confirmation_mode);
   const [businessName, setBusinessName] = useState(business.name);
   const [businessAddress, setBusinessAddress] = useState(business.address ?? "");
+  const [logoUrl, setLogoUrl] = useState(business.logo_url ?? null);
   const [publicSlug, setPublicSlug] = useState(business.slug);
   const [message, setMessage] = useState<{ type: "error" | "success"; text: string } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
   const selected = themes.find((item) => item.id === theme) ?? themes[0];
   const form = useForm<SettingsForm>({
     resolver: zodResolver(schema),
@@ -69,7 +72,7 @@ export function SettingsView({ business }: { business: AppBusiness }) {
           booking_confirmation_mode: mode,
         })
         .eq("id", business.id)
-        .select("name,address")
+        .select("name,address,logo_url")
         .single();
 
       if (error) {
@@ -84,6 +87,7 @@ export function SettingsView({ business }: { business: AppBusiness }) {
 
       setBusinessName(data.name);
       setBusinessAddress(data.address ?? "");
+      setLogoUrl(data.logo_url ?? null);
       setPublicSlug(values.slug.trim());
       setMessage({ type: "success", text: "Configuracoes salvas com sucesso." });
     } catch {
@@ -93,11 +97,58 @@ export function SettingsView({ business }: { business: AppBusiness }) {
     }
   }
 
+  async function handleLogoUpload(file: File) {
+    setIsUploadingLogo(true);
+    setMessage(null);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await fetch("/api/business/logo", {
+        method: "POST",
+        body: formData,
+      });
+      const payload = (await response.json().catch(() => null)) as { logoUrl?: string | null; error?: string } | null;
+
+      if (!response.ok) {
+        throw new Error(payload?.error ?? "Nao foi possivel enviar a foto.");
+      }
+
+      setLogoUrl(payload?.logoUrl ?? null);
+      setMessage({ type: "success", text: "Foto do estabelecimento atualizada." });
+    } finally {
+      setIsUploadingLogo(false);
+    }
+  }
+
+  async function handleLogoRemove() {
+    setIsUploadingLogo(true);
+    setMessage(null);
+
+    try {
+      const response = await fetch("/api/business/logo", {
+        method: "DELETE",
+      });
+      const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+
+      if (!response.ok) {
+        throw new Error(payload?.error ?? "Nao foi possivel remover a foto.");
+      }
+
+      setLogoUrl(null);
+      setMessage({ type: "success", text: "Foto do estabelecimento removida." });
+    } finally {
+      setIsUploadingLogo(false);
+    }
+  }
+
   return (
     <AdminShell
       title="Configuracoes"
       description="Dados reais do estabelecimento e preferencias visuais."
       businessName={businessName}
+      businessLogoUrl={logoUrl}
       themeKey={theme}
     >
       <div className="grid gap-6 lg:grid-cols-[1fr_0.9fr]">
@@ -141,9 +192,14 @@ export function SettingsView({ business }: { business: AppBusiness }) {
                 <Input id="business-address" {...form.register("address")} />
               </div>
             </form>
-            <div className="rounded-lg border border-dashed bg-secondary p-5 text-sm text-muted-foreground">
-              Configuracoes do estabelecimento salvas no Supabase. Upload de logo e storage ficam para etapa futura.
-            </div>
+            <BusinessLogoField
+              label="Foto do estabelecimento"
+              logoUrl={logoUrl}
+              isBusy={isUploadingLogo}
+              onLogoPrepared={handleLogoUpload}
+              onRemove={handleLogoRemove}
+              onError={(text) => setMessage({ type: "error", text })}
+            />
             <div className="rounded-lg border bg-white p-4 text-sm">
               <p className="font-medium text-slate-950">Link publico de agendamento</p>
               <p className="mt-1 break-all text-muted-foreground">/agendar/{publicSlug}</p>
@@ -201,8 +257,20 @@ export function SettingsView({ business }: { business: AppBusiness }) {
                     <span key={color} className="h-2 flex-1 rounded-full" style={{ backgroundColor: color }} />
                   ))}
                 </div>
-                <h3 className="text-xl font-semibold text-slate-950">{businessName}</h3>
-                <p className="mt-1 text-sm text-muted-foreground">{businessAddress || "Endereco nao informado"}</p>
+                <div className="flex items-center gap-3">
+                  {logoUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={logoUrl} alt={businessName} className="size-12 rounded-lg object-cover" />
+                  ) : (
+                    <div className="grid size-12 place-items-center rounded-lg bg-primary text-sm font-semibold text-primary-foreground">
+                      {businessName.slice(0, 1).toUpperCase()}
+                    </div>
+                  )}
+                  <div>
+                    <h3 className="text-xl font-semibold text-slate-950">{businessName}</h3>
+                    <p className="mt-1 text-sm text-muted-foreground">{businessAddress || "Endereco nao informado"}</p>
+                  </div>
+                </div>
                 <Button className="mt-5 w-full">Agendar horario</Button>
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
