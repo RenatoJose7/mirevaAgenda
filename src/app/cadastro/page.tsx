@@ -7,6 +7,7 @@ import { ArrowLeft, Mail, RefreshCcw } from "lucide-react";
 import { useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
+import { AppVersion } from "@/components/app-version";
 import { AuthNotice } from "@/components/auth-notice";
 import { BrandMark } from "@/components/brand-mark";
 import { PasswordInput } from "@/components/password-input";
@@ -325,6 +326,7 @@ export default function CadastroPage() {
               Entrar
             </Link>
           </p>
+          <AppVersion className="mt-5" />
         </CardContent>
       </Card>
     </main>

@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { AppVersion } from "@/components/app-version";
 import { BrandMark } from "@/components/brand-mark";
 import { OnboardingForm } from "@/components/onboarding-form";
 import { getCurrentBusiness, requireUser } from "@/lib/auth/server";
@@ -18,6 +19,7 @@ export default async function OnboardingPage() {
       <div className="mx-auto max-w-5xl">
         <BrandMark />
         <OnboardingForm />
+        <AppVersion className="mt-5" />
       </div>
     </main>
   );

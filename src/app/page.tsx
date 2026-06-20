@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowRight, CalendarDays, LayoutDashboard, Sparkles } from "lucide-react";
+import { AppVersion } from "@/components/app-version";
 import { BrandMark } from "@/components/brand-mark";
 import { PublicBusinessSearch } from "@/components/public-business-search";
 import { Badge } from "@/components/ui/badge";
@@ -74,6 +75,7 @@ export default function HomePage() {
             </Card>
           </div>
         </section>
+        <AppVersion className="pb-2" />
       </div>
     </main>
   );

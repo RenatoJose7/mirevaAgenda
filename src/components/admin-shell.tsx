@@ -13,6 +13,7 @@ import {
   LogOut,
   Users,
 } from "lucide-react";
+import { AppVersion } from "@/components/app-version";
 import { BrandMark } from "@/components/brand-mark";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -82,14 +83,17 @@ export function AdminShell({
         <BrandMark />
         <Separator className="my-6" />
         <NavList />
-        <div className="absolute bottom-6 left-5 right-5 rounded-lg border bg-secondary p-4">
-          <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-            <Sparkles className="size-4 text-primary" />
-            Ambiente de testes
+        <div className="absolute bottom-6 left-5 right-5 space-y-3">
+          <div className="rounded-lg border bg-secondary p-4">
+            <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+              <Sparkles className="size-4 text-primary" />
+              Ambiente de testes
+            </div>
+            <p className="mt-2 text-xs leading-5 text-muted-foreground">
+              Dados reais do estabelecimento no projeto configurado.
+            </p>
           </div>
-          <p className="mt-2 text-xs leading-5 text-muted-foreground">
-            Dados reais do estabelecimento no projeto configurado.
-          </p>
+          <AppVersion />
         </div>
       </aside>
 
@@ -107,6 +111,7 @@ export function AdminShell({
                   <BrandMark />
                   <Separator className="my-6" />
                   <NavList />
+                  <AppVersion className="mt-8 text-left" />
                 </SheetContent>
               </Sheet>
               {businessLogoUrl && (

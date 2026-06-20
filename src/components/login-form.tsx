@@ -7,6 +7,7 @@ import { ArrowRight, Mail } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { AppVersion } from "@/components/app-version";
 import { AuthNotice } from "@/components/auth-notice";
 import { BrandMark } from "@/components/brand-mark";
 import { PasswordInput } from "@/components/password-input";
@@ -146,6 +147,7 @@ export function LoginForm() {
             Criar cadastro
           </Link>
         </p>
+        <AppVersion className="mt-5" />
       </CardContent>
     </Card>
   );
