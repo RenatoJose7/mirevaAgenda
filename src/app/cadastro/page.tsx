@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft, Mail, RefreshCcw } from "lucide-react";
 import { useState } from "react";
@@ -35,7 +34,6 @@ const schema = z
 type FormData = z.infer<typeof schema>;
 
 export default function CadastroPage() {
-  const router = useRouter();
   const [message, setMessage] = useState<{ type: "error" | "success"; text: string } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [pendingEmail, setPendingEmail] = useState<string | null>(null);
@@ -73,7 +71,7 @@ export default function CadastroPage() {
       }
 
       if (data.session) {
-        router.push("/onboarding");
+        window.location.assign("/onboarding");
         return;
       }
 
@@ -121,7 +119,7 @@ export default function CadastroPage() {
         return;
       }
 
-      router.push("/onboarding");
+      window.location.assign("/onboarding");
     } catch {
       setMessage({
         type: "error",

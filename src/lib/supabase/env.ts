@@ -1,19 +1,23 @@
 export function isSupabaseConfigured() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+  const key = getPublicSupabaseKey();
 
   return Boolean(url && key && isValidSupabaseUrl(url));
 }
 
 export function getSupabaseConfig() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+  const key = getPublicSupabaseKey();
 
   if (!url || !key || !isValidSupabaseUrl(url)) {
-    throw new Error("Supabase nao configurado. Preencha NEXT_PUBLIC_SUPABASE_URL e NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY.");
+    throw new Error("Supabase nao configurado. Preencha NEXT_PUBLIC_SUPABASE_URL e a chave publica do Supabase.");
   }
 
   return { url, key };
+}
+
+function getPublicSupabaseKey() {
+  return process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 }
 
 function isValidSupabaseUrl(value: string) {

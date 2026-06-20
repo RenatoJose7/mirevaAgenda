@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowRight, Mail } from "lucide-react";
 import { useState } from "react";
@@ -28,7 +28,6 @@ const schema = z.object({
 type FormData = z.infer<typeof schema>;
 
 export function LoginForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const [message, setMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -57,7 +56,7 @@ export function LoginForm() {
       }
 
       const business = await getCurrentBusiness(supabase);
-      router.push(business ? nextPath : "/onboarding");
+      window.location.assign(business ? nextPath : "/onboarding");
     } catch {
       setMessage("Supabase nao configurado. Preencha o .env.local para ativar login real.");
     } finally {
