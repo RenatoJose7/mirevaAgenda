@@ -3,35 +3,14 @@ import { createServerClient } from "@supabase/ssr";
 import { isSupabaseConfigured, getSupabaseConfig } from "@/lib/supabase/env";
 import { clearSupabaseAuthCookies, isRefreshTokenError } from "@/lib/supabase/cookies";
 
-const protectedPrefixes = [
-  "/onboarding",
-  "/dashboard",
-  "/agenda",
-  "/servicos",
-  "/profissionais",
-  "/notificacoes",
-  "/configuracoes",
-];
-
-function isProtectedPath(pathname: string) {
-  return protectedPrefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
-}
-
 export async function updateSession(request: NextRequest) {
-  const pathname = request.nextUrl.pathname;
-
-  if (!isProtectedPath(pathname)) {
-    return NextResponse.next({ request });
-  }
+  const response = NextResponse.next({ request });
 
   if (!isSupabaseConfigured()) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/login";
-    url.searchParams.set("erro", "supabase-env");
-    return NextResponse.redirect(url);
+    return response;
   }
 
-  let response = NextResponse.next({ request });
+  let nextResponse = response;
   const { url, key } = getSupabaseConfig();
 
   const supabase = createServerClient(url, key, {
@@ -41,27 +20,17 @@ export async function updateSession(request: NextRequest) {
       },
       setAll(cookiesToSet) {
         cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
-        response = NextResponse.next({ request });
-        cookiesToSet.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
+        nextResponse = NextResponse.next({ request });
+        cookiesToSet.forEach(({ name, value, options }) => nextResponse.cookies.set(name, value, options));
       },
     },
   });
 
-  const { data, error } = await supabase.auth.getClaims();
+  const { error } = await supabase.auth.getClaims();
 
-  if (error || !data?.claims?.sub) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/login";
-    url.searchParams.set("next", pathname);
-    if (isRefreshTokenError(error?.message)) {
-      url.searchParams.set("erro", "session-expired");
-    }
-
-    const redirectResponse = NextResponse.redirect(url);
-    clearSupabaseAuthCookies(request, redirectResponse);
-
-    return redirectResponse;
+  if (isRefreshTokenError(error?.message)) {
+    clearSupabaseAuthCookies(request, nextResponse);
   }
 
-  return response;
+  return nextResponse;
 }
