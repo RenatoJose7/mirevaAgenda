@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import { z } from "zod";
 import { translateAuthError } from "@/lib/auth/messages";
+import { clearSupabaseAuthCookieStore } from "@/lib/supabase/cookies";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { createClient } from "@/lib/supabase/server";
 
@@ -22,6 +24,8 @@ export async function POST(request: Request) {
   if (!parsed.success) {
     return NextResponse.json({ error: "Informe o codigo completo recebido por e-mail." }, { status: 400 });
   }
+
+  clearSupabaseAuthCookieStore(await cookies());
 
   const supabase = await createClient();
   const { error } = await supabase.auth.verifyOtp({

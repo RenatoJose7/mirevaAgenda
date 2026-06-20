@@ -36,6 +36,7 @@ export function LoginForm() {
   });
   const envError = searchParams.get("erro") === "supabase-env";
   const oauthError = searchParams.get("erro") === "oauth";
+  const sessionExpired = searchParams.get("erro") === "session-expired";
   const nextPath = sanitizeAuthRedirectPath(searchParams.get("next"));
 
   async function handleLogin(values: FormData) {
@@ -106,6 +107,7 @@ export function LoginForm() {
             <AuthNotice message="Supabase ainda nao foi configurado. Preencha as variaveis em .env.local." />
           )}
           {oauthError && <AuthNotice message="Nao foi possivel concluir o login com Google. Verifique o provider." />}
+          {sessionExpired && <AuthNotice message="Sua sessao expirou. Entre novamente para continuar." />}
           {message && <AuthNotice message={message} />}
         </div>
 

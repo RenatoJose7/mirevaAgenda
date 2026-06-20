@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { isSupabaseConfigured, getSupabaseConfig } from "@/lib/supabase/env";
+import { clearSupabaseAuthCookies, isRefreshTokenError } from "@/lib/supabase/cookies";
 
 const protectedPrefixes = [
   "/onboarding",
@@ -52,7 +53,14 @@ export async function updateSession(request: NextRequest) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     url.searchParams.set("next", pathname);
-    return NextResponse.redirect(url);
+    if (isRefreshTokenError(error?.message)) {
+      url.searchParams.set("erro", "session-expired");
+    }
+
+    const redirectResponse = NextResponse.redirect(url);
+    clearSupabaseAuthCookies(request, redirectResponse);
+
+    return redirectResponse;
   }
 
   return response;
