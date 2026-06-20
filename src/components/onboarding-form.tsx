@@ -68,7 +68,7 @@ export function OnboardingForm() {
 
       if (!response.ok) {
         const payload = (await response.json().catch(() => null)) as { error?: string } | null;
-        setMessage(getOnboardingErrorMessage(payload?.error ?? "Nao foi possivel criar o estabelecimento."));
+        setMessage(getOnboardingErrorMessage(payload?.error ?? "Não foi possível criar o estabelecimento."));
         return;
       }
 
@@ -80,7 +80,7 @@ export function OnboardingForm() {
 
       router.push("/dashboard");
     } catch {
-      setMessage("Supabase nao configurado. Preencha o .env.local para criar o estabelecimento real.");
+      setMessage("Supabase não configurado. Preencha o .env.local para criar o estabelecimento real.");
     } finally {
       setIsSubmitting(false);
     }
@@ -108,14 +108,14 @@ export function OnboardingForm() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="business-segment">Segmento</Label>
-              <Input id="business-segment" {...form.register("segment")} placeholder="Ex: consultoria, educacao, saude" />
+              <Input id="business-segment" {...form.register("segment")} placeholder="Ex: consultoria, educação, saúde" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="business-whatsapp">WhatsApp</Label>
               <Input id="business-whatsapp" {...form.register("whatsapp")} placeholder="(11) 99999-0000" />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="business-address">Endereco</Label>
+              <Label htmlFor="business-address">Endereço</Label>
               <Input id="business-address" {...form.register("address")} placeholder="Rua, numero - bairro" />
             </div>
           </div>
@@ -134,7 +134,7 @@ export function OnboardingForm() {
             onError={setMessage}
           />
           <div className="space-y-2">
-            <Label htmlFor="business-note">Observacao interna</Label>
+            <Label htmlFor="business-note">Observação interna</Label>
             <Textarea
               id="business-note"
               {...form.register("note")}
@@ -171,10 +171,10 @@ export function OnboardingForm() {
             </div>
           </div>
           <div>
-            <Label>Confirmacao de reservas</Label>
+            <Label>Confirmação de reservas</Label>
             <div className="mt-3 grid gap-3 sm:grid-cols-2">
               {[
-                ["automatic", "Automatica", "Padrao do MVP"],
+                ["automatic", "Automática", "Padrão do MVP"],
                 ["manual", "Manual", "Opcao visual futura"],
               ].map(([id, title, helper]) => (
                 <button
@@ -190,7 +190,7 @@ export function OnboardingForm() {
             </div>
           </div>
           <Button className="w-full" type="submit" form="onboarding-form" disabled={isSubmitting}>
-            {isSubmitting ? "Criando estabelecimento..." : "Concluir configuracao"}
+            {isSubmitting ? "Criando estabelecimento..." : "Concluir configuração"}
           </Button>
         </div>
         </CardContent>
@@ -210,15 +210,15 @@ async function uploadInitialLogo(file: File) {
 
   if (!response.ok) {
     const payload = (await response.json().catch(() => null)) as { error?: string } | null;
-    throw new Error(payload?.error ?? "Nao foi possivel enviar a foto.");
+    throw new Error(payload?.error ?? "Não foi possível enviar a foto.");
   }
 }
 
 function getOnboardingErrorMessage(message: string) {
   const normalized = message.toLowerCase();
 
-  if (normalized.includes("tema invalido") || normalized.includes("businesses_theme_key_check")) {
-    return "O tema escolhido ainda nao existe no banco. Aplique as migrations mais recentes ou selecione o tema Mireva por enquanto.";
+  if (normalized.includes("tema inválido") || normalized.includes("businesses_theme_key_check")) {
+    return "O tema escolhido ainda não existe no banco. Aplique as migrations mais recentes ou selecione o tema Mireva por enquanto.";
   }
 
   if (normalized.includes("ja possui") || normalized.includes("already")) {
@@ -226,8 +226,8 @@ function getOnboardingErrorMessage(message: string) {
   }
 
   if (normalized.includes("function") || normalized.includes("schema cache") || normalized.includes("create_business_for_current_user")) {
-    return "A migration de onboarding ainda nao foi aplicada no Supabase. Aplique as migrations e tente novamente.";
+    return "A migration de onboarding ainda não foi aplicada no Supabase. Aplique as migrations e tente novamente.";
   }
 
-  return `Nao foi possivel criar o estabelecimento: ${message}`;
+  return `Não foi possível criar o estabelecimento: ${message}`;
 }

@@ -35,10 +35,10 @@ import {
 import { createClient } from "@/lib/supabase/client";
 
 const serviceSchema = z.object({
-  name: z.string().min(2, "Informe o nome do servico."),
+  name: z.string().min(2, "Informe o nome do serviço."),
   short_description: z.string().optional(),
   base_price: z.string().optional(),
-  base_duration_minutes: z.number().int().min(1, "Informe uma duracao valida."),
+  base_duration_minutes: z.number().int().min(1, "Informe uma duração válida."),
   is_active: z.boolean(),
 });
 
@@ -243,19 +243,19 @@ export function ServicesManager({
             .single();
 
       if (result.error || !result.data) {
-        setMessage({ type: "error", text: "Nao foi possivel salvar o servico." });
+        setMessage({ type: "error", text: "Não foi possível salvar o serviço." });
         setIsSubmitting(false);
         return;
       }
 
       await syncAssociations(result.data.id);
       await reloadData();
-      setMessage({ type: "success", text: editing ? "Servico atualizado." : "Servico cadastrado." });
+      setMessage({ type: "success", text: editing ? "Serviço atualizado." : "Serviço cadastrado." });
       setEditing(null);
       setIsFormOpen(false);
       form.reset(emptyForm);
     } catch {
-      setMessage({ type: "error", text: "Nao foi possivel salvar os vinculos do servico." });
+      setMessage({ type: "error", text: "Não foi possível salvar os vínculos do serviço." });
     } finally {
       setIsSubmitting(false);
     }
@@ -270,7 +270,7 @@ export function ServicesManager({
       .eq("business_id", businessId);
 
     if (error) {
-      setMessage({ type: "error", text: "Nao foi possivel alterar o status." });
+      setMessage({ type: "error", text: "Não foi possível alterar o status." });
       return;
     }
 
@@ -294,19 +294,19 @@ export function ServicesManager({
     ]);
 
     if (serviceError || linksError) {
-      setMessage({ type: "error", text: "Nao foi possivel remover o servico." });
+      setMessage({ type: "error", text: "Não foi possível remover o serviço." });
       return;
     }
 
     await reloadData();
-    setMessage({ type: "success", text: "Servico removido." });
+    setMessage({ type: "success", text: "Serviço removido." });
     setServiceToRemove(null);
   }
 
   return (
     <AdminShell
-      title="Servicos"
-      description="Catalogo real de servicos e vinculos por profissional."
+      title="Serviços"
+      description="Catálogo real de serviços e vínculos por profissional."
       businessName={businessName}
       themeKey={themeKey}
     >
@@ -314,14 +314,14 @@ export function ServicesManager({
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">{businessName}</p>
-            <h1 className="mt-2 text-2xl font-semibold text-slate-950">Servicos cadastrados</h1>
+            <h1 className="mt-2 text-2xl font-semibold text-slate-950">Serviços cadastrados</h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              Configure preco, duracao e quais profissionais podem realizar cada servico.
+              Configure preço, duração e quais profissionais podem realizar cada serviço.
             </p>
           </div>
           <Button onClick={startCreate}>
             <Plus className="size-4" />
-            Cadastrar servico
+            Cadastrar serviço
           </Button>
         </div>
 
@@ -333,7 +333,7 @@ export function ServicesManager({
               <form className="space-y-5" onSubmit={form.handleSubmit(saveService)}>
                 <div className="flex items-center justify-between gap-4">
                   <h2 className="text-lg font-semibold text-slate-950">
-                    {editing ? "Editar servico" : "Novo servico"}
+                    {editing ? "Editar serviço" : "Novo serviço"}
                   </h2>
                   <Button
                     type="button"
@@ -343,7 +343,7 @@ export function ServicesManager({
                       setIsFormOpen(false);
                       setEditing(null);
                     }}
-                    aria-label="Fechar formulario"
+                    aria-label="Fechar formulário"
                   >
                     <X className="size-4" />
                   </Button>
@@ -351,18 +351,18 @@ export function ServicesManager({
 
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
-                    <Label htmlFor="service-name">Nome do servico</Label>
+                    <Label htmlFor="service-name">Nome do serviço</Label>
                     <Input id="service-name" {...form.register("name")} />
                     {form.formState.errors.name && (
                       <p className="text-sm text-destructive">{form.formState.errors.name.message}</p>
                     )}
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="service-price">Preco base</Label>
+                    <Label htmlFor="service-price">Preço base</Label>
                     <Input id="service-price" inputMode="decimal" placeholder="Ex: 120,00" {...form.register("base_price")} />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="service-duration">Duracao base em minutos</Label>
+                    <Label htmlFor="service-duration">Duração base em minutos</Label>
                     <Input
                       id="service-duration"
                       type="number"
@@ -375,25 +375,25 @@ export function ServicesManager({
                   </div>
                   <label className="flex items-center gap-3 self-end rounded-lg border p-3 text-sm">
                     <input type="checkbox" className="size-4 accent-primary" {...form.register("is_active")} />
-                    Servico ativo
+                    Serviço ativo
                   </label>
                   <div className="space-y-2 sm:col-span-2">
-                    <Label htmlFor="service-description">Descricao curta</Label>
+                    <Label htmlFor="service-description">Descrição curta</Label>
                     <Textarea id="service-description" {...form.register("short_description")} rows={3} />
                   </div>
                 </div>
 
                 <div className="space-y-3">
                   <div>
-                    <h3 className="font-semibold text-slate-950">Vinculos com profissionais</h3>
+                    <h3 className="font-semibold text-slate-950">Vínculos com profissionais</h3>
                     <p className="text-sm text-muted-foreground">
-                      Preco e duracao personalizados sao opcionais e substituem os valores base para aquele profissional.
+                      Preço e duração personalizados são opcionais e substituem os valores base para aquele profissional.
                     </p>
                   </div>
 
                   {activeProfessionals.length === 0 ? (
                     <div className="rounded-lg border border-dashed bg-secondary p-4 text-sm text-muted-foreground">
-                      Cadastre profissionais ativos para criar vinculos.
+                      Cadastre profissionais ativos para criar vínculos.
                     </div>
                   ) : (
                     <div className="grid gap-3 lg:grid-cols-2">
@@ -419,7 +419,7 @@ export function ServicesManager({
                               <Input
                                 value={draft.price}
                                 inputMode="decimal"
-                                placeholder="Preco opcional"
+                                placeholder="Preço opcional"
                                 disabled={!draft.enabled}
                                 onChange={(event) => updateAssociation(professional.id, { price: event.target.value })}
                               />
@@ -427,7 +427,7 @@ export function ServicesManager({
                                 value={draft.duration}
                                 type="number"
                                 min={1}
-                                placeholder="Duracao opcional"
+                                placeholder="Duração opcional"
                                 disabled={!draft.enabled}
                                 onChange={(event) => updateAssociation(professional.id, { duration: event.target.value })}
                               />
@@ -441,7 +441,7 @@ export function ServicesManager({
 
                 <Button type="submit" disabled={isSubmitting}>
                   <Save className="size-4" />
-                  {isSubmitting ? "Salvando..." : "Salvar servico"}
+                  {isSubmitting ? "Salvando..." : "Salvar serviço"}
                 </Button>
               </form>
             </CardContent>
@@ -453,14 +453,14 @@ export function ServicesManager({
             <CardContent className="flex min-h-64 flex-col items-center justify-center gap-4 p-8 text-center">
               <Plus className="size-10 text-primary" />
               <div>
-                <h2 className="text-lg font-semibold text-slate-950">Nenhum servico cadastrado</h2>
+                <h2 className="text-lg font-semibold text-slate-950">Nenhum serviço cadastrado</h2>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Crie o catalogo base do estabelecimento.
+                  Crie o catálogo base do estabelecimento.
                 </p>
               </div>
               <Button onClick={startCreate}>
                 <Plus className="size-4" />
-                Cadastrar servico
+                Cadastrar serviço
               </Button>
             </CardContent>
           </Card>
@@ -475,7 +475,7 @@ export function ServicesManager({
                       <div>
                         <h2 className="text-lg font-semibold text-slate-950">{service.name}</h2>
                         <p className="mt-1 text-sm text-muted-foreground">
-                          {service.short_description || "Descricao ainda nao informada."}
+                          {service.short_description || "Descrição ainda não informada."}
                         </p>
                       </div>
                       <Badge variant={service.is_active ? "default" : "secondary"}>
@@ -484,11 +484,11 @@ export function ServicesManager({
                     </div>
                     <div className="grid gap-3 sm:grid-cols-2">
                       <div className="rounded-lg bg-secondary p-3">
-                        <span className="text-xs text-muted-foreground">Preco base</span>
+                        <span className="text-xs text-muted-foreground">Preço base</span>
                         <strong className="block text-lg text-slate-950">{formatCents(service.base_price_cents)}</strong>
                       </div>
                       <div className="rounded-lg bg-secondary p-3">
-                        <span className="text-xs text-muted-foreground">Duracao base</span>
+                        <span className="text-xs text-muted-foreground">Duração base</span>
                         <strong className="block text-lg text-slate-950">{service.base_duration_minutes} min</strong>
                       </div>
                     </div>
@@ -542,11 +542,11 @@ export function ServicesManager({
               <AlertDialogMedia className="bg-destructive/10 text-destructive">
                 <Trash2 className="size-5" />
               </AlertDialogMedia>
-              <AlertDialogTitle>Remover servico</AlertDialogTitle>
+              <AlertDialogTitle>Remover serviço</AlertDialogTitle>
               <AlertDialogDescription>
                 {serviceToRemove
-                  ? `Remover "${serviceToRemove.name}" do catalogo? O servico sera inativado e os vinculos com profissionais tambem serao desativados.`
-                  : "Remover este servico do catalogo?"}
+                  ? `Remover "${serviceToRemove.name}" do catálogo? O serviço será inativado e os vínculos com profissionais também serão desativados.`
+                  : "Remover este serviço do catálogo?"}
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>

@@ -13,7 +13,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   const user = await getCurrentUser();
 
   if (!user) {
-    return NextResponse.json({ error: "Sessao obrigatoria." }, { status: 401 });
+    return NextResponse.json({ error: "Sessão obrigatória." }, { status: 401 });
   }
 
   const business = await getCurrentBusiness(user.id);
@@ -27,7 +27,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   const parsed = schema.safeParse(body);
 
   if (!parsed.success) {
-    return NextResponse.json({ error: "Status invalido." }, { status: 400 });
+    return NextResponse.json({ error: "Status inválido." }, { status: 400 });
   }
 
   const result = await updateAppointmentStatus({

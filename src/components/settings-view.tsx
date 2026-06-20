@@ -24,7 +24,7 @@ const schema = z.object({
   slug: z
     .string()
     .min(2, "Informe o nome do link.")
-    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Use apenas letras, numeros e hifens."),
+    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Use apenas letras, números e hifens."),
   segment: z.string().optional(),
   whatsapp: z.string().optional(),
   address: z.string().optional(),
@@ -79,8 +79,8 @@ export function SettingsView({ business }: { business: AppBusiness }) {
         setMessage({
           type: "error",
           text: error.code === "23505"
-            ? "Este nome do link ja esta em uso. Escolha outro."
-            : "Nao foi possivel salvar as configuracoes.",
+            ? "Este nome do link já está em uso. Escolha outro."
+            : "Não foi possível salvar as configurações.",
         });
         return;
       }
@@ -89,9 +89,9 @@ export function SettingsView({ business }: { business: AppBusiness }) {
       setBusinessAddress(data.address ?? "");
       setLogoUrl(data.logo_url ?? null);
       setPublicSlug(values.slug.trim());
-      setMessage({ type: "success", text: "Configuracoes salvas com sucesso." });
+      setMessage({ type: "success", text: "Configurações salvas com sucesso." });
     } catch {
-      setMessage({ type: "error", text: "Supabase nao configurado ou sessao expirada." });
+      setMessage({ type: "error", text: "Supabase não configurado ou sessão expirada." });
     } finally {
       setIsSubmitting(false);
     }
@@ -112,7 +112,7 @@ export function SettingsView({ business }: { business: AppBusiness }) {
       const payload = (await response.json().catch(() => null)) as { logoUrl?: string | null; error?: string } | null;
 
       if (!response.ok) {
-        throw new Error(payload?.error ?? "Nao foi possivel enviar a foto.");
+        throw new Error(payload?.error ?? "Não foi possível enviar a foto.");
       }
 
       setLogoUrl(payload?.logoUrl ?? null);
@@ -133,7 +133,7 @@ export function SettingsView({ business }: { business: AppBusiness }) {
       const payload = (await response.json().catch(() => null)) as { error?: string } | null;
 
       if (!response.ok) {
-        throw new Error(payload?.error ?? "Nao foi possivel remover a foto.");
+        throw new Error(payload?.error ?? "Não foi possível remover a foto.");
       }
 
       setLogoUrl(null);
@@ -145,8 +145,8 @@ export function SettingsView({ business }: { business: AppBusiness }) {
 
   return (
     <AdminShell
-      title="Configuracoes"
-      description="Dados reais do estabelecimento e preferencias visuais."
+      title="Configurações"
+      description="Dados reais do estabelecimento e preferências visuais."
       businessName={businessName}
       businessLogoUrl={logoUrl}
       themeKey={theme}
@@ -181,14 +181,14 @@ export function SettingsView({ business }: { business: AppBusiness }) {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="business-segment">Segmento</Label>
-                <Input id="business-segment" {...form.register("segment")} placeholder="Ex: consultoria, educacao, saude" />
+                <Input id="business-segment" {...form.register("segment")} placeholder="Ex: consultoria, educação, saúde" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="business-whatsapp">WhatsApp</Label>
                 <Input id="business-whatsapp" {...form.register("whatsapp")} />
               </div>
               <div className="space-y-2 sm:col-span-2">
-                <Label htmlFor="business-address">Endereco</Label>
+                <Label htmlFor="business-address">Endereço</Label>
                 <Input id="business-address" {...form.register("address")} />
               </div>
             </form>
@@ -201,7 +201,7 @@ export function SettingsView({ business }: { business: AppBusiness }) {
               onError={(text) => setMessage({ type: "error", text })}
             />
             <div className="rounded-lg border bg-white p-4 text-sm">
-              <p className="font-medium text-slate-950">Link publico de agendamento</p>
+              <p className="font-medium text-slate-950">Link público de agendamento</p>
               <p className="mt-1 break-all text-muted-foreground">/agendar/{publicSlug}</p>
               <Button
                 className="mt-3"
@@ -209,11 +209,11 @@ export function SettingsView({ business }: { business: AppBusiness }) {
                 variant="outline"
                 onClick={() => navigator.clipboard.writeText(`${window.location.origin}/agendar/${publicSlug}`)}
               >
-                Copiar link publico
+                Copiar link público
               </Button>
             </div>
             <Button type="submit" form="settings-form" disabled={isSubmitting}>
-              {isSubmitting ? "Salvando..." : "Salvar configuracoes"}
+              {isSubmitting ? "Salvando..." : "Salvar configurações"}
             </Button>
           </CardContent>
         </Card>
@@ -250,7 +250,7 @@ export function SettingsView({ business }: { business: AppBusiness }) {
 
           <Card>
             <CardContent className="space-y-4 p-5">
-              <SectionHeading title="Previa publica" icon={Eye} />
+              <SectionHeading title="Prévia pública" icon={Eye} />
               <div className="rounded-lg border bg-white p-5">
                 <div className="mb-4 flex gap-2">
                   {selected.colors.map((color) => (
@@ -268,15 +268,15 @@ export function SettingsView({ business }: { business: AppBusiness }) {
                   )}
                   <div>
                     <h3 className="text-xl font-semibold text-slate-950">{businessName}</h3>
-                    <p className="mt-1 text-sm text-muted-foreground">{businessAddress || "Endereco nao informado"}</p>
+                    <p className="mt-1 text-sm text-muted-foreground">{businessAddress || "Endereço não informado"}</p>
                   </div>
                 </div>
-                <Button className="mt-5 w-full">Agendar horario</Button>
+                <Button className="mt-5 w-full">Agendar horário</Button>
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
                 {[
-                  ["automatic", "Confirmacao automatica"],
-                  ["manual", "Aprovacao manual"],
+                  ["automatic", "Confirmação automática"],
+                  ["manual", "Aprovação manual"],
                 ].map(([id, label]) => (
                   <Button
                     key={id}

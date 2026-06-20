@@ -8,7 +8,7 @@ export async function GET(_request: Request, context: { params: Promise<{ slug: 
   const appointment = await getAppointmentByToken(slug, token, "cancel");
 
   if (!appointment) {
-    return NextResponse.json({ error: "Reserva nao encontrada." }, { status: 404 });
+    return NextResponse.json({ error: "Reserva não encontrada." }, { status: 404 });
   }
 
   return NextResponse.json({ appointment });

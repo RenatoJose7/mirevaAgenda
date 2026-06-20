@@ -26,7 +26,7 @@ export function PublicRescheduleClient({ slug, token }: { slug: string; token: s
       .then((response) => response.json().then((payload) => ({ ok: response.ok, payload })))
       .then(({ ok, payload }) => {
         if (!ok) {
-          setMessage({ type: "error", text: payload.error ?? "Reserva nao encontrada." });
+          setMessage({ type: "error", text: payload.error ?? "Reserva não encontrada." });
           return;
         }
         setAppointment(payload.appointment);
@@ -48,7 +48,7 @@ export function PublicRescheduleClient({ slug, token }: { slug: string; token: s
       .then((response) => response.json().then((payload) => ({ ok: response.ok, payload })))
       .then(({ ok, payload }) => {
         setSlots(ok ? payload.slots : []);
-        setEmptySlotsReason(ok ? payload.emptyReason ?? "" : payload.error ?? "Nao foi possivel calcular horarios.");
+        setEmptySlotsReason(ok ? payload.emptyReason ?? "" : payload.error ?? "Não foi possível calcular horários.");
       });
   }, [appointment, date, slug]);
 
@@ -61,7 +61,7 @@ export function PublicRescheduleClient({ slug, token }: { slug: string; token: s
     const payload = await response.json();
 
     if (!response.ok) {
-      setMessage({ type: "error", text: payload.error ?? "Nao foi possivel remarcar." });
+      setMessage({ type: "error", text: payload.error ?? "Não foi possível remarcar." });
       return;
     }
 
@@ -77,7 +77,7 @@ export function PublicRescheduleClient({ slug, token }: { slug: string; token: s
             <h1 className="text-3xl font-semibold text-slate-950">Remarcar reserva</h1>
             {appointment && (
               <p className="mt-2 text-sm text-muted-foreground">
-                Reserva atual: {appointment.appointment_date} as {appointment.start_time.slice(0, 5)}
+                Reserva atual: {appointment.appointment_date} às {appointment.start_time.slice(0, 5)}
               </p>
             )}
           </div>
@@ -86,7 +86,7 @@ export function PublicRescheduleClient({ slug, token }: { slug: string; token: s
           <div className="grid grid-cols-3 gap-3 sm:grid-cols-6">
             {slots.length === 0 ? (
               <p className="col-span-3 text-sm text-muted-foreground sm:col-span-6">
-                {emptySlotsReason || "Nenhum horario disponivel para remarcacao."}
+                {emptySlotsReason || "Nenhum horário disponível para remarcação."}
               </p>
             ) : (
               slots.map((slot) => (
@@ -97,7 +97,7 @@ export function PublicRescheduleClient({ slug, token }: { slug: string; token: s
             )}
           </div>
           <Button className="w-full" onClick={reschedule} disabled={!time}>
-            Confirmar remarcacao
+            Confirmar remarcação
           </Button>
           <Button asChild variant="secondary" className="w-full">
             <Link href={`/agendar/${slug}`}>Voltar</Link>

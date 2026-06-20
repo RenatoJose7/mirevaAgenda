@@ -38,7 +38,7 @@ export function DemoDialog({
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
         <div className="rounded-lg border bg-secondary p-4 text-sm text-muted-foreground">
-          Esta acao e apenas demonstrativa nesta etapa. Nenhum dado foi salvo.
+          Esta ação e apenas demonstrativa nesta etapa. Nenhum dado foi salvo.
         </div>
         <DialogFooter>
           <Button type="button" onClick={() => setOpen(false)}>

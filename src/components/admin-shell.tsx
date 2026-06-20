@@ -26,9 +26,9 @@ const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: Home },
   { href: "/agenda", label: "Agenda", icon: CalendarDays },
   { href: "/profissionais", label: "Profissionais", icon: Users },
-  { href: "/servicos", label: "Servicos", icon: Scissors },
-  { href: "/notificacoes", label: "Notificacoes", icon: Bell },
-  { href: "/configuracoes", label: "Configuracoes", icon: Settings },
+  { href: "/servicos", label: "Serviços", icon: Scissors },
+  { href: "/notificacoes", label: "Notificações", icon: Bell },
+  { href: "/configuracoes", label: "Configurações", icon: Settings },
 ];
 
 function NavList() {
@@ -134,7 +134,7 @@ export function AdminShell({
             <div className="flex items-center gap-2">
               <Badge variant="secondary">Teste</Badge>
               <Link href="/notificacoes" prefetch={false}>
-                <Button variant="outline" size="icon" aria-label="Ver notificacoes" className="relative">
+                <Button variant="outline" size="icon" aria-label="Ver notificações" className="relative">
                   <Bell className="size-4" />
                   <span className="absolute -right-1 -top-1 grid size-5 place-items-center rounded-full bg-primary text-[10px] text-primary-foreground">
                     {unreadCount}

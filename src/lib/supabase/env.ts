@@ -10,7 +10,7 @@ export function getSupabaseConfig() {
   const key = getPublicSupabaseKey();
 
   if (!url || !key || !isValidSupabaseUrl(url)) {
-    throw new Error("Supabase nao configurado. Preencha NEXT_PUBLIC_SUPABASE_URL e a chave publica do Supabase.");
+    throw new Error("Supabase não configurado. Preencha NEXT_PUBLIC_SUPABASE_URL e a chave publica do Supabase.");
   }
 
   return { url, key };

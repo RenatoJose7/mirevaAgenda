@@ -91,7 +91,7 @@ export function PublicBusinessSearch() {
                   )}
                   <div className="min-w-0">
                     <p className="truncate font-semibold text-slate-950">{business.name}</p>
-                    <p className="text-sm text-muted-foreground">{business.segment || "Agendamento por horario marcado"}</p>
+                    <p className="text-sm text-muted-foreground">{business.segment || "Agendamento por horário marcado"}</p>
                     {business.address && <p className="mt-1 text-xs text-muted-foreground">{business.address}</p>}
                   </div>
                 </div>

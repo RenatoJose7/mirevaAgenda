@@ -23,7 +23,7 @@ export function BusinessLogoField({
   logoUrl,
   disabled = false,
   isBusy = false,
-  helper = "JPG, PNG ou WEBP. A imagem sera reduzida antes do envio.",
+  helper = "JPG, PNG ou WEBP. A imagem será reduzida antes do envio.",
   onLogoPrepared,
   onRemove,
   onError,
@@ -55,10 +55,10 @@ export function BusinessLogoField({
       } catch (error) {
         URL.revokeObjectURL(nextPreviewUrl);
         setPreviewUrl(previousPreviewUrl ?? logoUrl ?? null);
-        onError?.(error instanceof Error ? error.message : "Nao foi possivel enviar a foto.");
+        onError?.(error instanceof Error ? error.message : "Não foi possível enviar a foto.");
       }
     } catch (error) {
-      onError?.(error instanceof Error ? error.message : "Nao foi possivel preparar a imagem.");
+      onError?.(error instanceof Error ? error.message : "Não foi possível preparar a imagem.");
     } finally {
       setIsPreparing(false);
     }
@@ -74,7 +74,7 @@ export function BusinessLogoField({
       await onRemove();
       setPreviewUrl(null);
     } catch (error) {
-      onError?.(error instanceof Error ? error.message : "Nao foi possivel remover a foto.");
+      onError?.(error instanceof Error ? error.message : "Não foi possível remover a foto.");
     }
   }
 

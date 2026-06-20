@@ -15,20 +15,20 @@ export async function POST(request: Request) {
   const user = await getCurrentUser();
 
   if (!user) {
-    return NextResponse.json({ error: "Sessao obrigatoria." }, { status: 401 });
+    return NextResponse.json({ error: "Sessão obrigatória." }, { status: 401 });
   }
 
   const business = await getCurrentBusiness(user.id);
 
   if (!business) {
-    return NextResponse.json({ error: "Estabelecimento nao configurado." }, { status: 403 });
+    return NextResponse.json({ error: "Estabelecimento não configurado." }, { status: 403 });
   }
 
   const body = await request.json().catch(() => null);
   const parsed = schema.safeParse(body);
 
   if (!parsed.success) {
-    return NextResponse.json({ error: "Parametros invalidos." }, { status: 400 });
+    return NextResponse.json({ error: "Parametros inválidos." }, { status: 400 });
   }
 
   const result = await getAvailabilityForBusiness({

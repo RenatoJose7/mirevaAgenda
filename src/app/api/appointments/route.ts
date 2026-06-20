@@ -20,7 +20,7 @@ export async function POST(request: Request) {
   const user = await getCurrentUser();
 
   if (!user) {
-    return NextResponse.json({ error: "Sessao obrigatoria." }, { status: 401 });
+    return NextResponse.json({ error: "Sessão obrigatória." }, { status: 401 });
   }
 
   const business = await getCurrentBusiness(user.id);
@@ -33,7 +33,7 @@ export async function POST(request: Request) {
   const parsed = schema.safeParse(body);
 
   if (!parsed.success) {
-    return NextResponse.json({ error: "Revise os dados do agendamento e informe um WhatsApp valido." }, { status: 400 });
+    return NextResponse.json({ error: "Revise os dados do agendamento e informe um WhatsApp válido." }, { status: 400 });
   }
 
   const result = await createInternalAppointment({

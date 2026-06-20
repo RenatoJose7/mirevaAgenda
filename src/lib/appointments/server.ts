@@ -104,7 +104,7 @@ export async function getPublicAvailability({
   const data = preloadedData ?? await getPublicBookingData(slug);
 
   if (!data) {
-    return { ok: false as const, message: "Estabelecimento nao encontrado." };
+    return { ok: false as const, message: "Estabelecimento não encontrado." };
   }
 
   const supabase = createAdminClient();
@@ -131,7 +131,7 @@ export async function createPublicAppointment(input: {
   const data = await getPublicBookingData(input.slug);
 
   if (!data) {
-    return { ok: false as const, message: "Estabelecimento nao encontrado." };
+    return { ok: false as const, message: "Estabelecimento não encontrado." };
   }
 
   const availability = await getPublicAvailability({
@@ -151,7 +151,7 @@ export async function createPublicAppointment(input: {
   if (!selectedSlot) {
     return {
       ok: false as const,
-      message: availability.emptyReason ?? "Este horario acabou de ficar indisponivel. Escolha outro horario.",
+      message: availability.emptyReason ?? "Este horário acabou de ficar indisponível. Escolha outro horário.",
     };
   }
 
@@ -161,7 +161,7 @@ export async function createPublicAppointment(input: {
   );
 
   if (!isValidBrazilianWhatsapp(input.customerWhatsapp)) {
-    return { ok: false as const, message: "Informe um WhatsApp valido para receber informacoes sobre sua reserva." };
+    return { ok: false as const, message: "Informe um WhatsApp válido para receber informações sobre sua reserva." };
   }
 
   const customerWhatsapp = normalizeWhatsapp(input.customerWhatsapp);
@@ -184,7 +184,7 @@ export async function createPublicAppointment(input: {
     .single();
 
   if (customerError || !customer) {
-    return { ok: false as const, message: "Nao foi possivel salvar os dados do cliente." };
+    return { ok: false as const, message: "Não foi possível salvar os dados do cliente." };
   }
 
   const { data: appointment, error: appointmentError } = await supabase
@@ -218,7 +218,7 @@ export async function createPublicAppointment(input: {
     businessId: data.business.id,
     appointmentId: appointment.id,
     type: "appointment_created",
-    title: status === "pending" ? "Reserva aguardando confirmacao" : "Nova reserva criada",
+    title: status === "pending" ? "Reserva aguardando confirmação" : "Nova reserva criada",
     message: `${input.customerName.trim()} solicitou ${formatAppointmentDate(input.date, selectedSlot.start_time, selectedSlot.end_time)}.`,
     supabase,
   });
@@ -246,7 +246,7 @@ export async function cancelAppointmentByToken({
     .maybeSingle();
 
   if (!appointment) {
-    return { ok: false as const, message: "Link de cancelamento invalido." };
+    return { ok: false as const, message: "Link de cancelamento inválido." };
   }
 
   if (appointment.status === "cancelled") {
@@ -267,7 +267,7 @@ export async function cancelAppointmentByToken({
     .single();
 
   if (error || !updated) {
-    return { ok: false as const, message: "Nao foi possivel cancelar a reserva." };
+    return { ok: false as const, message: "Não foi possível cancelar a reserva." };
   }
 
   await createNotification({
@@ -297,7 +297,7 @@ export async function rescheduleAppointmentByToken(input: {
     .maybeSingle();
 
   if (!appointment) {
-    return { ok: false as const, message: "Link de remarcacao invalido." };
+    return { ok: false as const, message: "Link de remarcação inválido." };
   }
 
   const typedAppointment = appointment as AppointmentRecord;
@@ -323,7 +323,7 @@ export async function rescheduleAppointmentByToken(input: {
   if (!selectedSlot) {
     return {
       ok: false as const,
-      message: availability.emptyReason ?? "Este horario nao esta disponivel para remarcacao. Escolha outro horario.",
+      message: availability.emptyReason ?? "Este horário não está disponível para remarcação. Escolha outro horário.",
     };
   }
 
@@ -402,12 +402,12 @@ export async function createInternalAppointment(input: {
   if (!selectedSlot) {
     return {
       ok: false as const,
-      message: availability.emptyReason ?? "Este horario nao esta disponivel. Recalcule os horarios e tente novamente.",
+      message: availability.emptyReason ?? "Este horário não está disponível. Recalcule os horários e tente novamente.",
     };
   }
 
   if (!isValidBrazilianWhatsapp(input.customerWhatsapp)) {
-    return { ok: false as const, message: "Informe um WhatsApp valido." };
+    return { ok: false as const, message: "Informe um WhatsApp válido." };
   }
 
   const customerWhatsapp = normalizeWhatsapp(input.customerWhatsapp);
@@ -426,7 +426,7 @@ export async function createInternalAppointment(input: {
     .single();
 
   if (customerError || !customer) {
-    return { ok: false as const, message: "Nao foi possivel salvar cliente." };
+    return { ok: false as const, message: "Não foi possível salvar cliente." };
   }
 
   const { data: appointment, error } = await supabase
@@ -476,7 +476,7 @@ export async function updateAppointmentStatus({
     .single();
 
   if (error || !data) {
-    return { ok: false as const, message: "Nao foi possivel atualizar status." };
+    return { ok: false as const, message: "Não foi possível atualizar status." };
   }
 
   await supabase.from("internal_notifications").insert({
@@ -492,7 +492,7 @@ export async function updateAppointmentStatus({
 
 async function canChangeAppointment(appointment: AppointmentRecord, mode: "cancel" | "reschedule") {
   if (appointment.status === "completed" || appointment.status === "no_show") {
-    return { ok: false as const, message: "Esta reserva ja foi finalizada." };
+    return { ok: false as const, message: "Esta reserva já foi finalizada." };
   }
 
   const supabase = createAdminClient();
@@ -510,7 +510,7 @@ async function canChangeAppointment(appointment: AppointmentRecord, mode: "cance
   const minimumChangeTime = new Date(Date.now() + notice * 60_000);
 
   if (appointmentStart <= minimumChangeTime) {
-    return { ok: false as const, message: "Prazo minimo para alterar esta reserva foi encerrado." };
+    return { ok: false as const, message: "Prazo mínimo para alterar esta reserva foi encerrado." };
   }
 
   return { ok: true as const };
@@ -560,18 +560,18 @@ function getAppointmentWriteMessage(
   if (isConflict) {
     if (audience === "public") {
       return action === "reschedule"
-        ? "Este horario acabou de ficar indisponivel. Escolha outro horario para remarcar."
-        : "Este horario acabou de ser reservado por outra pessoa. Escolha outro horario.";
+        ? "Este horário acabou de ficar indisponível. Escolha outro horário para remarcar."
+        : "Este horário acabou de ser reservado por outra pessoa. Escolha outro horário.";
     }
 
-    return "Este horario conflita com outro agendamento do profissional. Recalcule os horarios e tente novamente.";
+    return "Este horário conflita com outro agendamento do profissional. Recalcule os horários e tente novamente.";
   }
 
   if (audience === "public") {
     return action === "reschedule"
-      ? "Nao foi possivel remarcar agora. Confira o horario escolhido e tente novamente."
-      : "Nao foi possivel criar a reserva agora. Confira os dados e tente novamente.";
+      ? "Não foi possível remarcar agora. Confira o horário escolhido e tente novamente."
+      : "Não foi possível criar a reserva agora. Confira os dados e tente novamente.";
   }
 
-  return "Nao foi possivel criar o agendamento. Confira cliente, servico, profissional e horario.";
+  return "Não foi possível criar o agendamento. Confira cliente, serviço, profissional e horário.";
 }

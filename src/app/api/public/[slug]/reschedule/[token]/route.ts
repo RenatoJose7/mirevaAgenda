@@ -14,7 +14,7 @@ export async function GET(_request: Request, context: { params: Promise<{ slug: 
   const appointment = await getAppointmentByToken(slug, token, "reschedule");
 
   if (!appointment) {
-    return NextResponse.json({ error: "Reserva nao encontrada." }, { status: 404 });
+    return NextResponse.json({ error: "Reserva não encontrada." }, { status: 404 });
   }
 
   return NextResponse.json({ appointment });
@@ -26,7 +26,7 @@ export async function POST(request: Request, context: { params: Promise<{ slug: 
   const parsed = schema.safeParse(body);
 
   if (!parsed.success) {
-    return NextResponse.json({ error: "Data ou horario invalido." }, { status: 400 });
+    return NextResponse.json({ error: "Data ou horário inválido." }, { status: 400 });
   }
 
   const result = await rescheduleAppointmentByToken({

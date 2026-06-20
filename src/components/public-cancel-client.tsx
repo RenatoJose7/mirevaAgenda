@@ -17,10 +17,10 @@ export function PublicCancelClient({ slug, token }: { slug: string; token: strin
       .then((response) => response.json().then((payload) => ({ ok: response.ok, payload })))
       .then(({ ok, payload }) => {
         if (!ok) {
-          setSummary("Reserva nao encontrada.");
+          setSummary("Reserva não encontrada.");
           return;
         }
-        setSummary(`${payload.appointment.appointment_date} as ${payload.appointment.start_time.slice(0, 5)}`);
+        setSummary(`${payload.appointment.appointment_date} às ${payload.appointment.start_time.slice(0, 5)}`);
       });
   }, [slug, token]);
 
@@ -29,7 +29,7 @@ export function PublicCancelClient({ slug, token }: { slug: string; token: strin
     const payload = await response.json();
 
     if (!response.ok) {
-      setMessage({ type: "error", text: payload.error ?? "Nao foi possivel cancelar." });
+      setMessage({ type: "error", text: payload.error ?? "Não foi possível cancelar." });
       return;
     }
 

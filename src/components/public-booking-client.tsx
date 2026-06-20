@@ -72,7 +72,7 @@ export function PublicBookingClient({ slug }: { slug: string }) {
       const payload = await response.json();
 
       if (!response.ok) {
-        setMessage({ type: "error", text: payload.error ?? "Estabelecimento nao encontrado." });
+        setMessage({ type: "error", text: payload.error ?? "Estabelecimento não encontrado." });
         setIsLoading(false);
         return;
       }
@@ -111,7 +111,7 @@ export function PublicBookingClient({ slug }: { slug: string }) {
       });
       const payload = await response.json();
       setSlots(response.ok ? payload.slots : []);
-      setEmptySlotsReason(response.ok ? payload.emptyReason ?? "" : payload.error ?? "Nao foi possivel calcular horarios.");
+      setEmptySlotsReason(response.ok ? payload.emptyReason ?? "" : payload.error ?? "Não foi possível calcular horários.");
       setIsChecking(false);
     }
 
@@ -127,12 +127,12 @@ export function PublicBookingClient({ slug }: { slug: string }) {
     }
 
     if (!serviceId || !effectiveProfessionalId || !date || !time || client.name.trim().length < 2) {
-      setMessage({ type: "error", text: "Preencha servico, profissional, data, horario, nome e WhatsApp." });
+      setMessage({ type: "error", text: "Preencha serviço, profissional, data, horário, nome e WhatsApp." });
       return;
     }
 
     if (!isValidBrazilianWhatsapp(client.whatsapp)) {
-      setMessage({ type: "error", text: "Informe um WhatsApp valido para receber informacoes sobre sua reserva." });
+      setMessage({ type: "error", text: "Informe um WhatsApp válido para receber informações sobre sua reserva." });
       return;
     }
 
@@ -154,7 +154,7 @@ export function PublicBookingClient({ slug }: { slug: string }) {
     const payload = await response.json();
 
     if (!response.ok) {
-      setMessage({ type: "error", text: payload.error ?? "Nao foi possivel criar a reserva." });
+      setMessage({ type: "error", text: payload.error ?? "Não foi possível criar a reserva." });
       setIsSubmitting(false);
       return;
     }
@@ -207,12 +207,12 @@ export function PublicBookingClient({ slug }: { slug: string }) {
             </div>
           )}
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Agendamento publico</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Agendamento público</p>
             <h1 className="mt-2 text-3xl font-semibold text-slate-950 md:text-5xl">{data.business.name}</h1>
           </div>
         </div>
         <p className="mt-4 text-base leading-7 text-muted-foreground">
-          Escolha servico, profissional, data e horario. O cliente final nao precisa criar conta.
+          Escolha serviço, profissional, data e horário. O cliente final não precisa criar conta.
         </p>
       </div>
 
@@ -221,7 +221,7 @@ export function PublicBookingClient({ slug }: { slug: string }) {
       {data.services.length === 0 || data.professionals.length === 0 ? (
         <Card>
           <CardContent className="p-8 text-center text-muted-foreground">
-            Este estabelecimento ainda nao possui horarios disponiveis.
+            Este estabelecimento ainda não possui horários disponíveis.
           </CardContent>
         </Card>
       ) : (
@@ -229,7 +229,7 @@ export function PublicBookingClient({ slug }: { slug: string }) {
           <div className="space-y-6">
             <Card>
               <CardContent className="p-5">
-                <h2 className="text-xl font-semibold text-slate-950">Servico</h2>
+                <h2 className="text-xl font-semibold text-slate-950">Serviço</h2>
                 <div className="mt-4 grid gap-3 md:grid-cols-2">
                   {data.services.map((service) => (
                     <button
@@ -245,7 +245,7 @@ export function PublicBookingClient({ slug }: { slug: string }) {
                       className={cn("rounded-lg border bg-white p-4 text-left transition", serviceId === service.id && "border-primary bg-secondary ring-2 ring-primary/10")}
                     >
                       <span className="font-semibold text-slate-950">{service.name}</span>
-                      <span className="mt-1 block text-sm text-muted-foreground">{service.short_description || "Servico por horario marcado."}</span>
+                      <span className="mt-1 block text-sm text-muted-foreground">{service.short_description || "Serviço por horário marcado."}</span>
                       <span className="mt-3 block text-sm font-medium text-primary">
                         {formatCents(service.base_price_cents)} - {service.base_duration_minutes} min
                       </span>
@@ -291,14 +291,14 @@ export function PublicBookingClient({ slug }: { slug: string }) {
                 <CardContent className="p-5">
                   <h2 className="flex items-center gap-2 text-xl font-semibold text-slate-950">
                     <Clock className="size-5 text-primary" />
-                    Horario
+                    Horário
                   </h2>
                   <div className="mt-4 grid grid-cols-3 gap-3">
                     {isChecking ? (
                       <p className="col-span-3 text-sm text-muted-foreground">Calculando...</p>
                     ) : slots.length === 0 ? (
                       <p className="col-span-3 text-sm text-muted-foreground">
-                        {emptySlotsReason || "Nenhum horario disponivel."}
+                        {emptySlotsReason || "Nenhum horário disponível."}
                       </p>
                     ) : (
                       slots.map((slot) => (
@@ -336,7 +336,7 @@ export function PublicBookingClient({ slug }: { slug: string }) {
                     <Input value={client.email} onChange={(event) => setClient((current) => ({ ...current, email: event.target.value }))} />
                   </div>
                   <div className="space-y-2 sm:col-span-2">
-                    <Label>Observacao opcional</Label>
+                    <Label>Observação opcional</Label>
                     <Textarea value={client.note} onChange={(event) => setClient((current) => ({ ...current, note: event.target.value }))} />
                   </div>
                   <Button className="sm:col-span-2" onClick={submit} disabled={isSubmitting}>
@@ -362,11 +362,11 @@ export function PublicBookingClient({ slug }: { slug: string }) {
                   )}
                   <h2 className="text-2xl font-semibold text-slate-950">{data.business.name}</h2>
                 </div>
-                <p className="text-sm text-muted-foreground">{data.business.address || "Endereco nao informado"}</p>
+                <p className="text-sm text-muted-foreground">{data.business.address || "Endereço não informado"}</p>
                 <div className="rounded-lg bg-secondary p-4 text-sm">
-                  <p><strong>Servico:</strong> {data.services.find((item) => item.id === serviceId)?.name || "-"}</p>
+                  <p><strong>Serviço:</strong> {data.services.find((item) => item.id === serviceId)?.name || "-"}</p>
                   <p><strong>Profissional:</strong> {data.professionals.find((item) => item.id === effectiveProfessionalId)?.name || "-"}</p>
-                  <p><strong>Data e horario:</strong> {date} {time && `as ${time}`}</p>
+                  <p><strong>Data e horário:</strong> {date} {time && `às ${time}`}</p>
                 </div>
               </CardContent>
             </Card>

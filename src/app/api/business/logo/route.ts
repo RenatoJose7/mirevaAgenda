@@ -16,7 +16,7 @@ export async function POST(request: Request) {
   const user = await getCurrentUser();
 
   if (!user) {
-    return NextResponse.json({ error: "Sessao obrigatoria para enviar a foto." }, { status: 401 });
+    return NextResponse.json({ error: "Sessão obrigatória para enviar a foto." }, { status: 401 });
   }
 
   const formData = await request.formData().catch(() => null);
@@ -31,7 +31,7 @@ export async function POST(request: Request) {
   }
 
   if (file.size > maxFileSize) {
-    return NextResponse.json({ error: "A imagem precisa ter ate 1MB." }, { status: 400 });
+    return NextResponse.json({ error: "A imagem precisa ter até 1MB." }, { status: 400 });
   }
 
   const supabase = await createClient();
@@ -54,7 +54,7 @@ export async function POST(request: Request) {
   });
 
   if (uploadError) {
-    return NextResponse.json({ error: "Nao foi possivel enviar a imagem. Verifique se a migration de Storage foi aplicada." }, { status: 400 });
+    return NextResponse.json({ error: "Não foi possível enviar a imagem. Verifique se a migration de Storage foi aplicada." }, { status: 400 });
   }
 
   const { data: publicUrlData } = supabase.storage.from(bucketName).getPublicUrl(path);
@@ -68,7 +68,7 @@ export async function POST(request: Request) {
 
   if (updateError || !business) {
     await supabase.storage.from(bucketName).remove([path]);
-    return NextResponse.json({ error: "Nao foi possivel salvar a foto no estabelecimento." }, { status: 400 });
+    return NextResponse.json({ error: "Não foi possível salvar a foto no estabelecimento." }, { status: 400 });
   }
 
   if (logoPath && logoPath !== path) {
@@ -82,14 +82,14 @@ export async function DELETE() {
   const user = await getCurrentUser();
 
   if (!user) {
-    return NextResponse.json({ error: "Sessao obrigatoria para remover a foto." }, { status: 401 });
+    return NextResponse.json({ error: "Sessão obrigatória para remover a foto." }, { status: 401 });
   }
 
   const supabase = await createClient();
   const { businessId, role, logoPath } = await getMembershipContext(supabase, user.id);
 
   if (!businessId) {
-    return NextResponse.json({ error: "Estabelecimento nao encontrado." }, { status: 404 });
+    return NextResponse.json({ error: "Estabelecimento não encontrado." }, { status: 404 });
   }
 
   if (role !== "owner") {
@@ -102,7 +102,7 @@ export async function DELETE() {
     .eq("id", businessId);
 
   if (error) {
-    return NextResponse.json({ error: "Nao foi possivel remover a foto do estabelecimento." }, { status: 400 });
+    return NextResponse.json({ error: "Não foi possível remover a foto do estabelecimento." }, { status: 400 });
   }
 
   if (logoPath) {

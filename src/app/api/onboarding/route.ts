@@ -21,7 +21,7 @@ export async function POST(request: Request) {
   const user = await getCurrentUser();
 
   if (!user) {
-    return NextResponse.json({ error: "Sessao obrigatoria para concluir o onboarding." }, { status: 401 });
+    return NextResponse.json({ error: "Sessão obrigatória para concluir o onboarding." }, { status: 401 });
   }
 
   const body = await request.json().catch(() => null);
@@ -61,7 +61,7 @@ export async function POST(request: Request) {
   );
 
   if (profileError) {
-    return NextResponse.json({ error: "Nao foi possivel preparar o perfil do usuario." }, { status: 500 });
+    return NextResponse.json({ error: "Não foi possível preparar o perfil do usuario." }, { status: 500 });
   }
 
   const { data: business, error: businessError } = await admin
@@ -90,14 +90,14 @@ export async function POST(request: Request) {
 
   if (memberError) {
     await admin.from("businesses").delete().eq("id", business.id);
-    return NextResponse.json({ error: "Nao foi possivel vincular o usuario ao estabelecimento." }, { status: 500 });
+    return NextResponse.json({ error: "Não foi possível vincular o usuario ao estabelecimento." }, { status: 500 });
   }
 
   return NextResponse.json({ business });
 }
 
 async function getAvailableSlug(admin: ReturnType<typeof createAdminClient>, name: string) {
-  const baseSlug = slugify(name) || "negocio";
+  const baseSlug = slugify(name) || "negócio";
   let candidate = baseSlug;
   let suffix = 1;
 
@@ -162,20 +162,20 @@ function getDatabaseMessage(message?: string) {
   const normalized = message?.toLowerCase() ?? "";
 
   if (normalized.includes("businesses_theme_key_check")) {
-    return "O tema escolhido ainda nao existe no banco. Aplique as migrations mais recentes ou selecione o tema Mireva por enquanto.";
+    return "O tema escolhido ainda não existe no banco. Aplique as migrations mais recentes ou selecione o tema Mireva por enquanto.";
   }
 
   if (normalized.includes("booking_confirmation_mode")) {
-    return "Modo de confirmacao invalido.";
+    return "Modo de confirmação inválido.";
   }
 
-  return "Nao foi possivel criar o estabelecimento.";
+  return "Não foi possível criar o estabelecimento.";
 }
 
 function getSchemaMessage(message?: string) {
   if (isSchemaCacheError(message)) {
-    return "O Supabase ainda nao atualizou o cache das tabelas. Aguarde alguns segundos e tente concluir novamente.";
+    return "O Supabase ainda não atualizou o cache das tabelas. Aguarde alguns segundos e tente concluir novamente.";
   }
 
-  return "Nao foi possivel verificar o onboarding.";
+  return "Não foi possível verificar o onboarding.";
 }

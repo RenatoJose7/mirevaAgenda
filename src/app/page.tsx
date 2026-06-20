@@ -27,11 +27,11 @@ export default function HomePage() {
           <div>
             <Badge className="mb-5 bg-primary/10 text-primary hover:bg-primary/10">Plataforma de agendamentos</Badge>
             <h1 className="max-w-3xl text-4xl font-semibold leading-tight text-slate-950 md:text-6xl">
-              Mireva Agenda para negocios que vivem de horario marcado.
+              Mireva Agenda para negócios que vivem de horário marcado.
             </h1>
             <p className="mt-5 max-w-2xl text-base leading-7 text-muted-foreground md:text-lg">
               Encontre um estabelecimento para agendar ou entre para gerenciar profissionais,
-              servicos, disponibilidade e reservas do seu negocio.
+              serviços, disponibilidade e reservas do seu negócio.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Button asChild size="lg" className="gap-2">
@@ -63,12 +63,12 @@ export default function HomePage() {
                   <div className="rounded-lg bg-secondary p-4">
                     <CalendarDays className="mb-3 size-5 text-primary" />
                     <strong className="block text-xl text-slate-950">Reservas</strong>
-                    <span className="text-sm text-muted-foreground">horarios, status e clientes</span>
+                    <span className="text-sm text-muted-foreground">horários, status e clientes</span>
                   </div>
                   <div className="rounded-lg bg-secondary p-4">
                     <LayoutDashboard className="mb-3 size-5 text-primary" />
-                    <strong className="block text-xl text-slate-950">Operacao</strong>
-                    <span className="text-sm text-muted-foreground">servicos, equipe e disponibilidade</span>
+                    <strong className="block text-xl text-slate-950">Operação</strong>
+                    <span className="text-sm text-muted-foreground">serviços, equipe e disponibilidade</span>
                   </div>
                 </div>
               </CardContent>

@@ -16,7 +16,7 @@ export async function POST(request: Request, context: { params: Promise<{ slug: 
   const parsed = schema.safeParse(body);
 
   if (!parsed.success) {
-    return NextResponse.json({ error: "Parametros invalidos." }, { status: 400 });
+    return NextResponse.json({ error: "Parametros inválidos." }, { status: 400 });
   }
 
   try {
@@ -38,7 +38,7 @@ export async function POST(request: Request, context: { params: Promise<{ slug: 
     });
   } catch (error) {
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Nao foi possivel calcular disponibilidade." },
+      { error: error instanceof Error ? error.message : "Não foi possível calcular disponibilidade." },
       { status: 500 },
     );
   }

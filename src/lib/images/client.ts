@@ -4,7 +4,7 @@ const maxCompressedSize = 1024 * 1024;
 
 export async function prepareBusinessLogo(file: File) {
   if (!file.type.startsWith("image/")) {
-    throw new Error("Selecione uma imagem valida.");
+    throw new Error("Selecione uma imagem válida.");
   }
 
   const image = await loadImage(file);
@@ -15,7 +15,7 @@ export async function prepareBusinessLogo(file: File) {
   const context = canvas.getContext("2d");
 
   if (!context) {
-    throw new Error("Nao foi possivel preparar a imagem.");
+    throw new Error("Não foi possível preparar a imagem.");
   }
 
   canvas.width = width;
@@ -44,7 +44,7 @@ function loadImage(file: File) {
 
     image.onerror = () => {
       URL.revokeObjectURL(url);
-      reject(new Error("Nao foi possivel ler a imagem."));
+      reject(new Error("Não foi possível ler a imagem."));
     };
 
     image.src = url;
@@ -56,7 +56,7 @@ function canvasToBlob(canvas: HTMLCanvasElement, type: string, quality: number) 
     canvas.toBlob(
       (blob) => {
         if (!blob) {
-          reject(new Error("Nao foi possivel compactar a imagem."));
+          reject(new Error("Não foi possível compactar a imagem."));
           return;
         }
 

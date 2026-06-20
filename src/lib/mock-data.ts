@@ -10,10 +10,10 @@ export { themes } from "@/lib/themes";
 
 export const business: Business = {
   name: "Negocio Exemplo",
-  segment: "Servicos por agendamento",
+  segment: "Serviços por agendamento",
   whatsapp: "(11) 99999-0000",
   address: "Rua das Flores, 120 - Centro",
-  slug: "negocio-exemplo",
+  slug: "negócio-exemplo",
   theme: "Mireva",
   confirmationMode: "automatico",
 };
@@ -31,7 +31,7 @@ export const professionals: Professional[] = [
     id: "bruna",
     name: "Bruna Lima",
     initials: "BL",
-    specialty: "Servicos especializados",
+    specialty: "Serviços especializados",
     status: "ativo",
     serviceIds: ["consulta-inicial", "sessao-especializada"],
   },
@@ -57,15 +57,15 @@ export const services: Service[] = [
   {
     id: "atendimento-individual",
     name: "Atendimento individual",
-    description: "Atendimento personalizado com horario marcado.",
+    description: "Atendimento personalizado com horário marcado.",
     basePrice: 60,
     baseDuration: 45,
     status: "ativo",
   },
   {
     id: "sessao-especializada",
-    name: "Sessao especializada",
-    description: "Servico de maior duracao com avaliacao previa.",
+    name: "Sessão especializada",
+    description: "Serviço de maior duração com avaliação prévia.",
     basePrice: 180,
     baseDuration: 120,
     status: "ativo",
@@ -73,7 +73,7 @@ export const services: Service[] = [
   {
     id: "retorno",
     name: "Retorno",
-    description: "Acompanhamento breve para clientes ja atendidos.",
+    description: "Acompanhamento breve para clientes já atendidos.",
     basePrice: 45,
     baseDuration: 40,
     status: "ativo",
@@ -115,7 +115,7 @@ export const appointments: Appointment[] = [
     clientWhatsapp: "(11) 90000-1003",
     serviceId: "retorno",
     professionalId: "rafael",
-    date: "Amanha",
+    date: "Amanhã",
     time: "10:20",
     status: "cancelado",
   },
@@ -135,15 +135,15 @@ export const notifications: Notification[] = [
   {
     id: "N-01",
     title: "Nova reserva recebida",
-    description: "Consulta inicial com Camila Souza as 09:30.",
+    description: "Consulta inicial com Camila Souza às 09:30.",
     time: "ha 8 min",
     type: "nova_reserva",
     read: false,
   },
   {
     id: "N-02",
-    title: "Solicitacao pendente",
-    description: "Sessao especializada aguardando confirmacao manual demonstrativa.",
+    title: "Solicitação pendente",
+    description: "Sessão especializada aguardando confirmação manual demonstrativa.",
     time: "ha 24 min",
     type: "pendente",
     read: false,
@@ -151,26 +151,26 @@ export const notifications: Notification[] = [
   {
     id: "N-03",
     title: "Cancelamento registrado",
-    description: "Cliente Demo 03 cancelou o horario das 10:20.",
+    description: "Cliente Demo 03 cancelou o horário das 10:20.",
     time: "ontem",
     type: "cancelamento",
     read: true,
   },
 ];
 
-export const dateOptions = ["Hoje", "Amanha", "Sexta", "Sabado", "Segunda"];
+export const dateOptions = ["Hoje", "Amanhã", "Sexta", "Sábado", "Segunda"];
 export const timeSlots = ["09:00", "09:30", "10:20", "11:00", "13:00", "14:30", "16:00", "17:20"];
 
 export const popularServices = [
   { name: "Consulta inicial", total: 38, percent: 82 },
   { name: "Atendimento individual", total: 24, percent: 58 },
-  { name: "Sessao especializada", total: 16, percent: 44 },
+  { name: "Sessão especializada", total: 16, percent: 44 },
 ];
 
 export const busyTimes = [
   { label: "Quarta, 14h", percent: 78 },
   { label: "Sexta, 16h", percent: 64 },
-  { label: "Sabado, 10h", percent: 57 },
+  { label: "Sábado, 10h", percent: 57 },
 ];
 
 export function money(value: number) {

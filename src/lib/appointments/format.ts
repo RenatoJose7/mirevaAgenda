@@ -1,15 +1,15 @@
 import type { AppointmentStatus } from "@/lib/business/types";
 
 export const appointmentStatusLabels: Record<AppointmentStatus, string> = {
-  pending: "Aguardando confirmacao",
+  pending: "Aguardando confirmação",
   confirmed: "Confirmado",
   cancelled: "Cancelado",
-  no_show: "Cliente nao apareceu",
-  completed: "Concluido",
+  no_show: "Cliente não apareceu",
+  completed: "Concluído",
 };
 
 export function formatAppointmentDate(date: string, start: string, end?: string) {
-  return `${date} das ${start.slice(0, 5)}${end ? ` as ${end.slice(0, 5)}` : ""}`;
+  return `${date} das ${start.slice(0, 5)}${end ? ` às ${end.slice(0, 5)}` : ""}`;
 }
 
 export function normalizeWhatsapp(value: string) {
@@ -54,11 +54,11 @@ export function getStatusUpdateMessage(customerName: string, status: Appointment
   const safeName = customerName.trim() || "O cliente";
 
   if (status === "completed") {
-    return `O agendamento de ${safeName} foi marcado como concluido.`;
+    return `O agendamento de ${safeName} foi marcado como concluído.`;
   }
 
   if (status === "no_show") {
-    return `O cliente ${safeName} nao compareceu.`;
+    return `O cliente ${safeName} não compareceu.`;
   }
 
   if (status === "cancelled") {
@@ -69,7 +69,7 @@ export function getStatusUpdateMessage(customerName: string, status: Appointment
     return `O agendamento de ${safeName} foi confirmado.`;
   }
 
-  return `O agendamento de ${safeName} esta aguardando confirmacao.`;
+  return `O agendamento de ${safeName} está aguardando confirmação.`;
 }
 
 export function addMinutesToTime(time: string, minutes: number) {

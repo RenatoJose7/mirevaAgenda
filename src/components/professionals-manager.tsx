@@ -128,7 +128,7 @@ export function ProfessionalsManager({
       : await supabase.from("professionals").insert({ ...payload, business_id: businessId });
 
     if (result.error) {
-      setMessage({ type: "error", text: "Nao foi possivel salvar o profissional." });
+      setMessage({ type: "error", text: "Não foi possível salvar o profissional." });
       setIsSubmitting(false);
       return;
     }
@@ -153,7 +153,7 @@ export function ProfessionalsManager({
       .eq("business_id", businessId);
 
     if (error) {
-      setMessage({ type: "error", text: "Nao foi possivel alterar o status." });
+      setMessage({ type: "error", text: "Não foi possível alterar o status." });
       return;
     }
 
@@ -170,7 +170,7 @@ export function ProfessionalsManager({
       .eq("business_id", businessId);
 
     if (error) {
-      setMessage({ type: "error", text: "Nao foi possivel remover o profissional." });
+      setMessage({ type: "error", text: "Não foi possível remover o profissional." });
       return;
     }
 
@@ -182,7 +182,7 @@ export function ProfessionalsManager({
   return (
     <AdminShell
       title="Profissionais"
-      description="Cadastre a equipe que podera ser vinculada aos servicos."
+      description="Cadastre a equipe que poderá ser vinculada aos serviços."
       businessName={businessName}
       themeKey={themeKey}
     >
@@ -261,7 +261,7 @@ export function ProfessionalsManager({
               <div>
                 <h2 className="text-lg font-semibold text-slate-950">Nenhum profissional cadastrado</h2>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Crie a equipe base antes de vincular servicos.
+                  Crie a equipe base antes de vincular serviços.
                 </p>
               </div>
               <Button onClick={startCreate}>
@@ -283,17 +283,17 @@ export function ProfessionalsManager({
                     </Avatar>
                     <div className="min-w-0">
                       <h2 className="truncate font-semibold text-slate-950">{professional.name}</h2>
-                      <p className="text-sm text-muted-foreground">{professional.role_title || "Funcao nao informada"}</p>
+                      <p className="text-sm text-muted-foreground">{professional.role_title || "Função não informada"}</p>
                       <Badge className="mt-2" variant={professional.is_active ? "default" : "secondary"}>
                         {professional.is_active ? "Ativo" : "Inativo"}
                       </Badge>
                     </div>
                   </div>
                   <p className="min-h-12 text-sm text-muted-foreground">
-                    {professional.bio || "Bio ainda nao informada."}
+                    {professional.bio || "Bio ainda não informada."}
                   </p>
                   <div className="rounded-lg bg-secondary p-3 text-sm text-muted-foreground">
-                    Disponibilidade e agenda real ainda nao fazem parte desta etapa.
+                    Disponibilidade e agenda real ainda não fazem parte desta etapa.
                   </div>
                   <div className="flex flex-wrap gap-2">
                     <Button variant="outline" onClick={() => startEdit(professional)}>
@@ -322,7 +322,7 @@ export function ProfessionalsManager({
               <AlertDialogTitle>Remover profissional</AlertDialogTitle>
               <AlertDialogDescription>
                 {professionalToRemove
-                  ? `Remover "${professionalToRemove.name}" da lista? O profissional sera inativado e nao aparecera mais nas telas principais.`
+                  ? `Remover "${professionalToRemove.name}" da lista? O profissional será inativado e não aparecerá mais nas telas principais.`
                   : "Remover este profissional da lista?"}
               </AlertDialogDescription>
             </AlertDialogHeader>

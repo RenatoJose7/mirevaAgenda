@@ -35,7 +35,7 @@ export async function getAvailabilityForBusiness({
   supabase?: SupabaseClient;
 }): Promise<AvailabilityResult> {
   if (!parseDate(date)) {
-    return { ok: false, message: "Data invalida." };
+    return { ok: false, message: "Data inválida." };
   }
 
   const supabase = providedClient ?? await createClient();
@@ -104,15 +104,15 @@ export async function getAvailabilityForBusiness({
   ]);
 
   if (professionalResult.error || !professionalResult.data) {
-    return { ok: false, message: "Profissional indisponivel ou fora deste estabelecimento." };
+    return { ok: false, message: "Profissional indisponível ou fora deste estabelecimento." };
   }
 
   if (serviceResult.error || !serviceResult.data) {
-    return { ok: false, message: "Servico indisponivel ou fora deste estabelecimento." };
+    return { ok: false, message: "Serviço indisponível ou fora deste estabelecimento." };
   }
 
   if (linkResult.error || !linkResult.data) {
-    return { ok: false, message: "Servico nao esta vinculado a este profissional." };
+    return { ok: false, message: "Serviço não está vinculado a este profissional." };
   }
 
   const durationMinutes =
@@ -168,7 +168,7 @@ function explainEmptyAvailability({
   const targetDate = parseDate(date);
 
   if (!targetDate || durationMinutes <= 0) {
-    return "Data ou duracao do servico invalida.";
+    return "Data ou duração do serviço inválida.";
   }
 
   const appliedSettings = { ...defaultBookingSettings, ...(settings ?? {}) };
@@ -180,14 +180,14 @@ function explainEmptyAvailability({
   }
 
   if (targetDate > maxDate) {
-    return `Este profissional aceita reservas com ate ${appliedSettings.booking_window_days} dias de antecedencia.`;
+    return `Este profissional aceita reservas com até ${appliedSettings.booking_window_days} dias de antecedencia.`;
   }
 
   const weekday = targetDate.getDay();
   const activeWorkingHours = workingHours.filter((item) => item.is_active && item.weekday === weekday);
 
   if (activeWorkingHours.length === 0) {
-    return "Este profissional nao possui horario de atendimento ativo neste dia.";
+    return "Este profissional não possui horário de atendimento ativo neste dia.";
   }
 
   const dateBlocks = blocks.filter((item) => item.is_active && item.block_date === date);
@@ -201,7 +201,7 @@ function explainEmptyAvailability({
   );
 
   if (durationMinutes > longestWorkingWindow) {
-    return "A duracao deste servico nao cabe nos horarios de atendimento deste dia.";
+    return "A duração deste serviço não cabe nos horários de atendimento deste dia.";
   }
 
   const minimumStart = new Date(now.getTime() + appliedSettings.minimum_notice_minutes * 60_000);
@@ -221,7 +221,7 @@ function explainEmptyAvailability({
   });
 
   if (!hasSlotAfterNotice) {
-    return "Nao ha horarios que respeitem a antecedencia minima configurada.";
+    return "Não há horários que respeitem a antecedência mínima configurada.";
   }
 
   const activeBreaks = breaks.filter((item) => item.is_active && item.weekday === weekday);
@@ -231,18 +231,18 @@ function explainEmptyAvailability({
   );
 
   if (activeAppointments.length > 0) {
-    return "Nao ha horarios livres neste dia porque a agenda do profissional ja esta ocupada.";
+    return "Não há horários livres neste dia porque a agenda do profissional já está ocupada.";
   }
 
   if (partialBlocks.length > 0) {
-    return "Nao ha horarios livres neste dia por causa dos bloqueios configurados.";
+    return "Não há horários livres neste dia por causa dos bloqueios configurados.";
   }
 
   if (activeBreaks.length > 0) {
-    return "Nao ha horarios livres neste dia por causa das pausas configuradas.";
+    return "Não há horários livres neste dia por causa das pausas configuradas.";
   }
 
-  return "Nao ha horarios livres para este servico nesta data.";
+  return "Não há horários livres para este serviço nesta data.";
 }
 
 function timeToMinutes(value: string) {

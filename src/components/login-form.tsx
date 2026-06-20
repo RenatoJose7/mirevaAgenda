@@ -20,7 +20,7 @@ import { sanitizeAuthRedirectPath } from "@/lib/auth/redirect";
 import { createClient } from "@/lib/supabase/client";
 
 const schema = z.object({
-  email: z.string().email("Informe um e-mail valido."),
+  email: z.string().email("Informe um e-mail válido."),
   password: z.string().min(6, "Use pelo menos 6 caracteres."),
 });
 
@@ -56,13 +56,13 @@ export function LoginForm() {
       const payload = (await response.json().catch(() => null)) as { redirectTo?: string; error?: string } | null;
 
       if (!response.ok) {
-        setMessage(payload?.error ?? "Nao foi possivel entrar. Verifique os dados e tente novamente.");
+        setMessage(payload?.error ?? "Não foi possível entrar. Verifique os dados e tente novamente.");
         return;
       }
 
       window.location.assign(payload?.redirectTo ?? "/dashboard");
     } catch {
-      setMessage("Supabase nao configurado. Preencha o .env.local para ativar login real.");
+      setMessage("Supabase não configurado. Preencha o .env.local para ativar login real.");
     } finally {
       setIsSubmitting(false);
     }
@@ -86,7 +86,7 @@ export function LoginForm() {
         setMessage(translateAuthError(error.message));
       }
     } catch {
-      setMessage("Supabase nao configurado. Preencha o .env.local para ativar login com Google.");
+      setMessage("Supabase não configurado. Preencha o .env.local para ativar login com Google.");
     } finally {
       setIsSubmitting(false);
     }
@@ -104,10 +104,10 @@ export function LoginForm() {
       <CardContent>
         <div className="mb-4 space-y-3">
           {envError && (
-            <AuthNotice message="Supabase ainda nao foi configurado. Preencha as variaveis em .env.local." />
+            <AuthNotice message="Supabase ainda não foi configurado. Preencha as variáveis em .env.local." />
           )}
-          {oauthError && <AuthNotice message="Nao foi possivel concluir o login com Google. Verifique o provider." />}
-          {sessionExpired && <AuthNotice message="Sua sessao expirou. Entre novamente para continuar." />}
+          {oauthError && <AuthNotice message="Não foi possível concluir o login com Google. Verifique o provider." />}
+          {sessionExpired && <AuthNotice message="Sua sessão expirou. Entre novamente para continuar." />}
           {message && <AuthNotice message={message} />}
         </div>
 
@@ -146,7 +146,7 @@ export function LoginForm() {
           Continuar com Google
         </Button>
         <p className="mt-5 text-center text-sm text-muted-foreground">
-          Ainda nao tem conta?{" "}
+          Ainda não tem conta?{" "}
           <Link href="/cadastro" className="font-medium text-primary">
             Criar cadastro
           </Link>

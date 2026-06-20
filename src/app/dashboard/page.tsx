@@ -51,9 +51,9 @@ export default async function DashboardPage() {
       <div className="space-y-6">
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <MetricCard label="Atendimentos hoje" value={String(todayAppointments.length)} helper="Dados reais" icon={UserCheck} />
-          <MetricCard label="Total do mes" value={String(monthAppointments.length)} helper="Agendamentos do mes" icon={CalendarPlus} />
-          <MetricCard label="Cancelamentos" value={String(cancelled.length)} helper="No mes atual" icon={CalendarX} />
-          <MetricCard label="Nao comparecimentos" value={String(noShow.length)} helper="No mes atual" icon={Users} />
+          <MetricCard label="Total do mês" value={String(monthAppointments.length)} helper="Agendamentos do mês" icon={CalendarPlus} />
+          <MetricCard label="Cancelamentos" value={String(cancelled.length)} helper="No mês atual" icon={CalendarX} />
+          <MetricCard label="Não comparecimentos" value={String(noShow.length)} helper="No mês atual" icon={Users} />
         </div>
 
         <div className="grid gap-6 xl:grid-cols-[1.45fr_0.9fr]">
@@ -71,7 +71,7 @@ export default async function DashboardPage() {
                   return (
                     <div key={appointment.id} className="flex flex-col gap-3 rounded-lg border bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
                       <div>
-                        <p className="font-medium text-slate-950">{service?.name ?? "Servico"}</p>
+                        <p className="font-medium text-slate-950">{service?.name ?? "Serviço"}</p>
                         <p className="text-sm text-muted-foreground">
                           {appointment.customer_name} com {professional?.name ?? "Profissional"}
                         </p>
@@ -108,7 +108,7 @@ export default async function DashboardPage() {
                 </div>
               ))}
               {notifications.length === 0 && (
-                <p className="rounded-lg bg-secondary p-4 text-sm text-muted-foreground">Nenhuma notificacao real ainda.</p>
+                <p className="rounded-lg bg-secondary p-4 text-sm text-muted-foreground">Nenhuma notificação real ainda.</p>
               )}
             </CardContent>
           </Card>
@@ -117,7 +117,7 @@ export default async function DashboardPage() {
         <div className="grid gap-6 lg:grid-cols-2">
           <Card>
             <CardContent className="p-5">
-              <SectionHeading title="Servicos mais agendados" icon={Scissors} />
+              <SectionHeading title="Serviços mais agendados" icon={Scissors} />
               <div className="mt-5 space-y-4">
                 {serviceCounts.map(({ service, total }) => (
                   <div key={service.id}>
@@ -139,7 +139,7 @@ export default async function DashboardPage() {
               <SectionHeading title="Resumo operacional" icon={Clock} />
               <div className="mt-5 space-y-3 text-sm text-muted-foreground">
                 <p>{professionals.length} profissionais cadastrados.</p>
-                <p>{services.length} servicos cadastrados.</p>
+                <p>{services.length} serviços cadastrados.</p>
                 <p>{appointments.length} agendamentos no historico atual.</p>
               </div>
             </CardContent>

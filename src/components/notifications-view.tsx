@@ -68,7 +68,7 @@ export function NotificationsView({
         {notifications.length === 0 ? (
           <Card>
             <CardContent className="p-8 text-center text-sm text-muted-foreground">
-              Nenhuma notificacao interna ainda.
+              Nenhuma notificação interna ainda.
             </CardContent>
           </Card>
         ) : (
@@ -82,7 +82,7 @@ export function NotificationsView({
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
                       <h2 className="font-semibold text-slate-950">{notification.title}</h2>
-                      <Badge variant={notification.is_read ? "secondary" : "default"}>{notification.is_read ? "Lida" : "Nao lida"}</Badge>
+                      <Badge variant={notification.is_read ? "secondary" : "default"}>{notification.is_read ? "Lida" : "Não lida"}</Badge>
                     </div>
                     <p className="mt-1 text-sm text-muted-foreground">{notification.message}</p>
                     <span className="mt-2 block text-xs text-muted-foreground">{new Date(notification.created_at).toLocaleString("pt-BR")}</span>

@@ -10,13 +10,13 @@ export async function GET(_request: Request, context: { params: Promise<{ slug: 
     const data = await getPublicBookingData(slug);
 
     if (!data) {
-      return NextResponse.json({ error: "Estabelecimento nao encontrado." }, { status: 404 });
+      return NextResponse.json({ error: "Estabelecimento não encontrado." }, { status: 404 });
     }
 
     return NextResponse.json(data);
   } catch (error) {
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Nao foi possivel carregar dados publicos." },
+      { error: error instanceof Error ? error.message : "Não foi possível carregar dados públicos." },
       { status: 500 },
     );
   }

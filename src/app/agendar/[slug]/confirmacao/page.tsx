@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { getThemeStyle } from "@/lib/themes";
 
-export default async function ConfirmacaoPage({
+export default async function ConfirmaçãoPage({
   params,
   searchParams,
 }: {
@@ -33,19 +33,19 @@ export default async function ConfirmacaoPage({
             <h1 className="mt-5 text-3xl font-semibold text-slate-950">Reserva recebida</h1>
             <p className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">
               {status === "pending"
-                ? "Seu agendamento foi enviado e aguarda confirmacao do estabelecimento."
+                ? "Seu agendamento foi enviado e aguarda confirmação do estabelecimento."
                 : "Seu agendamento foi confirmado com sucesso."}
             </p>
             <div className="mx-auto mt-6 max-w-xl rounded-lg bg-secondary p-5 text-left text-sm">
-              <p><strong>Data:</strong> {date || "Nao informada"}</p>
-              <p><strong>Horario:</strong> {time || "Nao informado"}</p>
-              <p><strong>Status:</strong> {status === "pending" ? "Aguardando confirmacao" : "Confirmado"}</p>
+              <p><strong>Data:</strong> {date || "Não informada"}</p>
+              <p><strong>Horário:</strong> {time || "Não informado"}</p>
+              <p><strong>Status:</strong> {status === "pending" ? "Aguardando confirmação" : "Confirmado"}</p>
             </div>
             <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
               <Button asChild className="gap-2">
                 <Link href="/">
                   <CheckCircle2 className="size-4" />
-                  Concluido
+                  Concluído
                 </Link>
               </Button>
               {rescheduleToken && (

@@ -6,7 +6,7 @@ type AnyStatus = RealAppointmentStatus | MockAppointmentStatus;
 
 const statusMap: Record<AnyStatus, { label: string; className: string }> = {
   pending: {
-    label: "Aguardando confirmacao",
+    label: "Aguardando confirmação",
     className: "border-amber-200 bg-amber-50 text-amber-700",
   },
   confirmed: {
@@ -18,15 +18,15 @@ const statusMap: Record<AnyStatus, { label: string; className: string }> = {
     className: "border-slate-200 bg-slate-50 text-slate-600",
   },
   no_show: {
-    label: "Cliente nao apareceu",
+    label: "Cliente não apareceu",
     className: "border-rose-200 bg-rose-50 text-rose-700",
   },
   completed: {
-    label: "Concluido",
+    label: "Concluído",
     className: "border-sky-200 bg-sky-50 text-sky-700",
   },
   aguardando_confirmacao: {
-    label: "Aguardando confirmacao",
+    label: "Aguardando confirmação",
     className: "border-amber-200 bg-amber-50 text-amber-700",
   },
   confirmado: {
@@ -38,7 +38,7 @@ const statusMap: Record<AnyStatus, { label: string; className: string }> = {
     className: "border-slate-200 bg-slate-50 text-slate-600",
   },
   cliente_nao_apareceu: {
-    label: "Cliente nao apareceu",
+    label: "Cliente não apareceu",
     className: "border-rose-200 bg-rose-50 text-rose-700",
   },
 };

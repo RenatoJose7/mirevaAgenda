@@ -2,7 +2,7 @@ export function translateAuthError(message: string) {
   const normalized = message.toLowerCase();
 
   if (normalized.includes("invalid login credentials")) {
-    return "E-mail ou senha invalidos.";
+    return "E-mail ou senha inválidos.";
   }
 
   if (normalized.includes("email not confirmed")) {
@@ -10,16 +10,16 @@ export function translateAuthError(message: string) {
   }
 
   if (normalized.includes("user already registered")) {
-    return "Este e-mail ja esta cadastrado. Tente entrar.";
+    return "Este e-mail já está cadastrado. Tente entrar.";
   }
 
   if (normalized.includes("token") || normalized.includes("otp")) {
-    return "Codigo invalido ou expirado. Confira o e-mail ou solicite um novo codigo.";
+    return "Código inválido ou expirado. Confira o e-mail ou solicite um novo código.";
   }
 
   if (normalized.includes("password")) {
-    return "A senha informada nao atende aos requisitos.";
+    return "A senha informada não atende aos requisitos.";
   }
 
-  return "Nao foi possivel concluir a acao. Verifique os dados e tente novamente.";
+  return "Não foi possível concluir a ação. Verifique os dados e tente novamente.";
 }

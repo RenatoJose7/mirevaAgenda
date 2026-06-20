@@ -21,7 +21,7 @@ import { createClient } from "@/lib/supabase/client";
 const schema = z
   .object({
     name: z.string().min(3, "Informe o nome do responsavel."),
-    email: z.string().email("Informe um e-mail valido."),
+    email: z.string().email("Informe um e-mail válido."),
     password: z.string().min(6, "Use pelo menos 6 caracteres."),
     confirmPassword: z.string(),
     terms: z.boolean().refine((value) => value, "Aceite os termos demonstrativos."),
@@ -77,14 +77,14 @@ export default function CadastroPage() {
 
       setMessage({
         type: "success",
-        text: "Cadastro criado. Digite o codigo de verificacao enviado para o seu e-mail.",
+        text: "Cadastro criado. Digite o código de verificação enviado para o seu e-mail.",
       });
       setPendingEmail(email);
       setVerificationCode("");
     } catch {
       setMessage({
         type: "error",
-        text: "Supabase nao configurado. Preencha o .env.local para ativar cadastro real.",
+        text: "Supabase não configurado. Preencha o .env.local para ativar cadastro real.",
       });
     } finally {
       setIsSubmitting(false);
@@ -99,7 +99,7 @@ export default function CadastroPage() {
     const token = verificationCode.trim();
 
     if (token.length < 6) {
-      setMessage({ type: "error", text: "Informe o codigo completo recebido por e-mail." });
+      setMessage({ type: "error", text: "Informe o código completo recebido por e-mail." });
       return;
     }
 
@@ -118,7 +118,7 @@ export default function CadastroPage() {
       const payload = (await response.json().catch(() => null)) as { redirectTo?: string; error?: string } | null;
 
       if (!response.ok) {
-        setMessage({ type: "error", text: payload?.error ?? "Nao foi possivel verificar o codigo." });
+        setMessage({ type: "error", text: payload?.error ?? "Não foi possível verificar o código." });
         return;
       }
 
@@ -126,7 +126,7 @@ export default function CadastroPage() {
     } catch {
       setMessage({
         type: "error",
-        text: "Nao foi possivel verificar o codigo agora. Confira o Supabase e tente novamente.",
+        text: "Não foi possível verificar o código agora. Confira o Supabase e tente novamente.",
       });
     } finally {
       setIsVerifying(false);
@@ -157,11 +157,11 @@ export default function CadastroPage() {
         return;
       }
 
-      setMessage({ type: "success", text: "Enviamos um novo codigo para o seu e-mail." });
+      setMessage({ type: "success", text: "Enviamos um novo código para o seu e-mail." });
     } catch {
       setMessage({
         type: "error",
-        text: "Nao foi possivel reenviar o codigo agora.",
+        text: "Não foi possível reenviar o código agora.",
       });
     } finally {
       setIsResending(false);
@@ -188,7 +188,7 @@ export default function CadastroPage() {
     } catch {
       setMessage({
         type: "error",
-        text: "Supabase nao configurado. Preencha o .env.local para ativar cadastro com Google.",
+        text: "Supabase não configurado. Preencha o .env.local para ativar cadastro com Google.",
       });
     } finally {
       setIsSubmitting(false);
@@ -215,11 +215,11 @@ export default function CadastroPage() {
           {pendingEmail ? (
             <div className="space-y-4">
               <div className="rounded-lg border bg-secondary p-4 text-sm text-muted-foreground">
-                Enviamos a verificacao para <strong className="text-foreground">{pendingEmail}</strong>. Digite o
-                codigo recebido ou, se o e-mail mostrar apenas um link, clique nele para confirmar.
+                Enviamos a verificação para <strong className="text-foreground">{pendingEmail}</strong>. Digite o
+                código recebido ou, se o e-mail mostrar apenas um link, clique nele para confirmar.
               </div>
               <div className="space-y-2">
-                <Label htmlFor="verification-code">Codigo de verificacao</Label>
+                <Label htmlFor="verification-code">Código de verificação</Label>
                 <Input
                   id="verification-code"
                   inputMode="numeric"
@@ -236,7 +236,7 @@ export default function CadastroPage() {
                 />
               </div>
               <Button className="w-full" type="button" disabled={isVerifying} onClick={handleVerifyCode}>
-                {isVerifying ? "Verificando..." : "Verificar codigo"}
+                {isVerifying ? "Verificando..." : "Verificar código"}
               </Button>
               <div className="grid gap-3 sm:grid-cols-2">
                 <Button
@@ -247,7 +247,7 @@ export default function CadastroPage() {
                   onClick={handleResendCode}
                 >
                   <RefreshCcw className="size-4" />
-                  {isResending ? "Reenviando..." : "Reenviar codigo"}
+                  {isResending ? "Reenviando..." : "Reenviar código"}
                 </Button>
                 <Button
                   type="button"

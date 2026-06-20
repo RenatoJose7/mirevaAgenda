@@ -29,11 +29,11 @@ import { cn } from "@/lib/utils";
 const weekdays = [
   "Domingo",
   "Segunda",
-  "Terca",
+  "Terça",
   "Quarta",
   "Quinta",
   "Sexta",
-  "Sabado",
+  "Sábado",
 ];
 
 type WorkdayDraft = {
@@ -472,7 +472,7 @@ export function AgendaView({
       if (result.error) {
         setMessage({
           type: "error",
-          text: "Nao foi possivel salvar os horarios. Confira se o inicio vem antes do fim e se os intervalos do mesmo dia nao se sobrepoem.",
+          text: "Não foi possível salvar os horários. Confira se o início vem antes do fim e se os intervalos do mesmo dia não se sobrepõem.",
         });
         setIsSaving(false);
         return;
@@ -480,7 +480,7 @@ export function AgendaView({
     }
 
     await reloadSchedule();
-    setMessage({ type: "success", text: "Horarios de atendimento salvos." });
+    setMessage({ type: "success", text: "Horários de atendimento salvos." });
     setIsSaving(false);
   }
 
@@ -502,7 +502,7 @@ export function AgendaView({
     );
 
     if (error) {
-      setMessage({ type: "error", text: "Nao foi possivel salvar as regras de disponibilidade." });
+      setMessage({ type: "error", text: "Não foi possível salvar as regras de disponibilidade." });
       setIsSaving(false);
       return;
     }
@@ -532,7 +532,7 @@ export function AgendaView({
     if (error) {
       setMessage({
         type: "error",
-        text: "Nao foi possivel criar a pausa. A pausa precisa ter inicio antes do fim e nao pode sobrepor outra pausa do mesmo dia.",
+        text: "Não foi possível criar a pausa. A pausa precisa ter início antes do fim e não pode sobrepor outra pausa do mesmo dia.",
       });
       setIsSaving(false);
       return;
@@ -548,7 +548,7 @@ export function AgendaView({
     const { error } = await supabase.from("professional_breaks").update({ is_active: false }).eq("id", id).eq("business_id", businessId);
 
     if (error) {
-      setMessage({ type: "error", text: "Nao foi possivel remover a pausa." });
+      setMessage({ type: "error", text: "Não foi possível remover a pausa." });
       return;
     }
 
@@ -578,7 +578,7 @@ export function AgendaView({
     if (error) {
       setMessage({
         type: "error",
-        text: "Nao foi possivel criar o bloqueio. Bloqueios parciais precisam ter inicio antes do fim; bloqueio de dia inteiro nao usa horario.",
+        text: "Não foi possível criar o bloqueio. Bloqueios parciais precisam ter início antes do fim; bloqueio de dia inteiro não usa horário.",
       });
       setIsSaving(false);
       return;
@@ -594,7 +594,7 @@ export function AgendaView({
     const { error } = await supabase.from("schedule_blocks").update({ is_active: false }).eq("id", id).eq("business_id", businessId);
 
     if (error) {
-      setMessage({ type: "error", text: "Nao foi possivel remover o bloqueio." });
+      setMessage({ type: "error", text: "Não foi possível remover o bloqueio." });
       return;
     }
 
@@ -604,7 +604,7 @@ export function AgendaView({
 
   async function testAvailability() {
     if (!selectedProfessionalId || !effectiveSelectedServiceId) {
-      setMessage({ type: "error", text: "Selecione profissional e servico vinculados." });
+      setMessage({ type: "error", text: "Selecione profissional e serviço vinculados." });
       return;
     }
 
@@ -624,7 +624,7 @@ export function AgendaView({
     const payload = await response.json();
 
     if (!response.ok) {
-      setMessage({ type: "error", text: payload.error ?? "Nao foi possivel calcular disponibilidade." });
+      setMessage({ type: "error", text: payload.error ?? "Não foi possível calcular disponibilidade." });
       setIsTesting(false);
       return;
     }
@@ -637,7 +637,7 @@ export function AgendaView({
 
   async function createManualAppointment() {
     if (!selectedServiceId || !selectedProfessionalId || !manualDraft.date || !manualDraft.time) {
-      setMessage({ type: "error", text: "Preencha servico, profissional, data e horario." });
+      setMessage({ type: "error", text: "Preencha serviço, profissional, data e horário." });
       return;
     }
 
@@ -657,7 +657,7 @@ export function AgendaView({
     const payload = await response.json();
 
     if (!response.ok) {
-      setMessage({ type: "error", text: payload.error ?? "Nao foi possivel criar agendamento." });
+      setMessage({ type: "error", text: payload.error ?? "Não foi possível criar agendamento." });
       return;
     }
 
@@ -676,7 +676,7 @@ export function AgendaView({
     const payload = await response.json();
 
     if (!response.ok) {
-      setMessage({ type: "error", text: payload.error ?? "Nao foi possivel atualizar status." });
+      setMessage({ type: "error", text: payload.error ?? "Não foi possível atualizar status." });
       return;
     }
 
@@ -687,7 +687,7 @@ export function AgendaView({
   return (
     <AdminShell
       title="Agenda"
-      description="Atendimentos do dia, horarios livres e configuracao de disponibilidade."
+      description="Atendimentos do dia, horários livres e configuração de disponibilidade."
       businessName={businessName}
       themeKey={themeKey}
       unreadCount={unreadCount}
@@ -740,7 +740,7 @@ export function AgendaView({
               <Clock className="mx-auto mb-3 size-10 text-primary" />
               <h2 className="text-lg font-semibold text-slate-950">Cadastre um profissional ativo</h2>
               <p className="mt-1 text-sm text-muted-foreground">
-                Horarios, pausas e bloqueios dependem de um profissional real.
+                Horários, pausas e bloqueios dependem de um profissional real.
               </p>
             </CardContent>
           </Card>
@@ -768,7 +768,7 @@ export function AgendaView({
                             variant={agendaDisplayMode === "time-grid" ? "default" : "ghost"}
                             onClick={() => updateAgendaDisplayMode("time-grid")}
                           >
-                            Grade de horarios
+                            Grade de horários
                           </Button>
                         </div>
                         <Input type="date" value={agendaDate} onChange={(event) => setAgendaDate(event.target.value)} />
@@ -784,7 +784,7 @@ export function AgendaView({
                       <div className="rounded-lg border border-dashed bg-secondary p-5">
                         <h2 className="font-semibold text-slate-950">Configure sua disponibilidade para comecar a receber agendamentos.</h2>
                         <p className="mt-1 text-sm text-muted-foreground">
-                          Este profissional ainda nao possui horarios ativos para {weekdays[selectedWeekday].toLowerCase()}.
+                          Este profissional ainda não possui horários ativos para {weekdays[selectedWeekday].toLowerCase()}.
                         </p>
                         <Button className="mt-4" type="button" onClick={() => setViewMode("settings")}>
                           Configurar disponibilidade
@@ -805,22 +805,22 @@ export function AgendaView({
                                   )}
                                 >
                                   <div>
-                                    <p className="font-medium">{service?.name ?? "Servico"}</p>
+                                    <p className="font-medium">{service?.name ?? "Serviço"}</p>
                                     <p className="text-sm opacity-75">
-                                      {appointment.customer_name} ate {trimTime(appointment.end_time)}
+                                      {appointment.customer_name} até {trimTime(appointment.end_time)}
                                     </p>
                                   </div>
                                   <div className="flex flex-wrap gap-2">
                                     <StatusBadge status={appointment.status} />
                                     {(["confirmed", "completed", "no_show", "cancelled"] as const).map((status) => (
                                       <Button key={status} variant="outline" onClick={() => updateStatus(appointment.id, status)}>
-                                        {status === "confirmed" ? "Confirmar" : status === "completed" ? "Concluir" : status === "no_show" ? "Nao apareceu" : "Cancelar"}
+                                        {status === "confirmed" ? "Confirmar" : status === "completed" ? "Concluir" : status === "no_show" ? "Não apareceu" : "Cancelar"}
                                       </Button>
                                     ))}
                                   </div>
                                 </div>
                               ) : (
-                                <span className="rounded-lg bg-secondary p-3 text-sm text-muted-foreground">Horario livre</span>
+                                <span className="rounded-lg bg-secondary p-3 text-sm text-muted-foreground">Horário livre</span>
                               )}
                             </div>
                           );
@@ -883,7 +883,7 @@ export function AgendaView({
                                   >
                                     <div className="flex items-start justify-between gap-2">
                                       <div className="min-w-0">
-                                        <p className="truncate text-sm font-semibold">{service?.name ?? "Servico"}</p>
+                                        <p className="truncate text-sm font-semibold">{service?.name ?? "Serviço"}</p>
                                         <p className="truncate text-xs opacity-75">{appointment.customer_name}</p>
                                       </div>
                                       <span className="shrink-0 text-xs font-semibold">
@@ -977,9 +977,9 @@ export function AgendaView({
                   <CardContent className="space-y-8">
                     <div className="space-y-4">
                       <div>
-                        <h3 className="font-semibold text-slate-950">Horarios de atendimento</h3>
+                        <h3 className="font-semibold text-slate-950">Horários de atendimento</h3>
                         <p className="text-sm text-muted-foreground">
-                          Marque os dias em que este profissional atende e informe o primeiro e o ultimo horario.
+                          Marque os dias em que este profissional atende e informe o primeiro e o último horário.
                         </p>
                       </div>
                       <div className="grid gap-3">
@@ -1034,7 +1034,7 @@ export function AgendaView({
                       </div>
                       <Button onClick={saveWorkingHours} disabled={isSaving}>
                         <Save className="size-4" />
-                        Salvar horarios
+                        Salvar horários
                       </Button>
                     </div>
 
@@ -1051,7 +1051,7 @@ export function AgendaView({
                         />
                         <HumanTimeField
                           id="minimum-notice"
-                          label="Cliente pode agendar com no minimo"
+                          label="Cliente pode agendar com no mínimo"
                           help="Evita agendamentos muito em cima da hora."
                           value={settingsDraft.minimum_notice_minutes}
                           onChange={(value) =>
@@ -1062,7 +1062,7 @@ export function AgendaView({
                           <div>
                             <Label htmlFor="booking-window">Permitir agendamentos ate</Label>
                             <FieldHelp>
-                              Define ate quantos dias no futuro o cliente pode escolher um horario.
+                              Define até quantos dias no futuro o cliente pode escolher um horário.
                             </FieldHelp>
                           </div>
                           <div className="relative">
@@ -1087,7 +1087,7 @@ export function AgendaView({
                         </div>
                         <div className="space-y-2">
                           <div>
-                            <Label htmlFor="slot-step">Mostrar horarios de</Label>
+                            <Label htmlFor="slot-step">Mostrar horários de</Label>
                             <FieldHelp>Ex: 15 em 15 minutos.</FieldHelp>
                           </div>
                           <select
@@ -1111,7 +1111,7 @@ export function AgendaView({
                         <HumanTimeField
                           id="cancellation-notice"
                           label="Cancelar ate"
-                          help="Tempo minimo antes do atendimento para permitir cancelamento."
+                          help="Tempo mínimo antes do atendimento para permitir cancelamento."
                           value={settingsDraft.cancellation_notice_minutes}
                           onChange={(value) =>
                             setSettingsDraft((current) => ({ ...current, cancellation_notice_minutes: value }))
@@ -1120,7 +1120,7 @@ export function AgendaView({
                         <HumanTimeField
                           id="reschedule-notice"
                           label="Remarcar ate"
-                          help="Tempo minimo antes do atendimento para permitir remarcacao."
+                          help="Tempo mínimo antes do atendimento para permitir remarcação."
                           value={settingsDraft.reschedule_notice_minutes}
                           onChange={(value) =>
                             setSettingsDraft((current) => ({ ...current, reschedule_notice_minutes: value }))
@@ -1129,7 +1129,7 @@ export function AgendaView({
                       </div>
                       <Button className="mt-5" onClick={saveSettings} disabled={isSaving}>
                         <Save className="size-4" />
-                        Salvar configuracoes
+                        Salvar configurações
                       </Button>
                     </div>
                   </CardContent>
@@ -1142,7 +1142,7 @@ export function AgendaView({
                       Indisponibilidades
                     </CardTitle>
                     <p className="text-sm text-muted-foreground">
-                      Cadastre pausas recorrentes ou bloqueie horarios especificos em que voce nao vai atender.
+                      Cadastre pausas recorrentes ou bloqueie horários específicos em que você não vai atender.
                     </p>
                   </CardHeader>
                   <CardContent className="space-y-5">
@@ -1170,7 +1170,7 @@ export function AgendaView({
                         <div>
                           <h3 className="font-semibold text-slate-950">Pausa semanal</h3>
                           <p className="text-sm text-muted-foreground">
-                            Use para horarios fixos, como almoco ou intervalo.
+                            Use para horários fixos, como almoço ou intervalo.
                           </p>
                         </div>
                         <div className="grid gap-3 md:grid-cols-[1.2fr_1fr_1fr_auto] md:items-end">
@@ -1241,7 +1241,7 @@ export function AgendaView({
                         <div>
                           <h3 className="font-semibold text-slate-950">Bloquear uma data</h3>
                           <p className="text-sm text-muted-foreground">
-                            Use para folgas, compromissos ou horarios especificos indisponiveis.
+                            Use para folgas, compromissos ou horários específicos indisponíveis.
                           </p>
                         </div>
                         <div className="grid gap-3 sm:grid-cols-2">
@@ -1340,13 +1340,13 @@ export function AgendaView({
                       Testar disponibilidade
                     </CardTitle>
                     <p className="text-sm text-muted-foreground">
-                      Confira quais horarios aparecerao para o cliente em uma data especifica.
+                      Confira quais horários aparecerão para o cliente em uma data específica.
                     </p>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="grid gap-4 sm:grid-cols-2">
                       <div className="space-y-2">
-                        <Label>Servico</Label>
+                        <Label>Serviço</Label>
                         <select
                           className="h-9 w-full rounded-lg border bg-white px-3 text-sm"
                           value={effectiveSelectedServiceId}
@@ -1370,20 +1370,20 @@ export function AgendaView({
                     </div>
                     <Button onClick={testAvailability} disabled={isTesting || linkedServices.length === 0}>
                       <Search className="size-4" />
-                      {isTesting ? "Calculando..." : "Ver horarios disponiveis"}
+                      {isTesting ? "Calculando..." : "Ver horários disponíveis"}
                     </Button>
                     {linkedServices.length === 0 && (
-                      <p className="text-sm text-muted-foreground">Vincule servicos a este profissional em Servicos.</p>
+                      <p className="text-sm text-muted-foreground">Vincule serviços a este profissional em Serviços.</p>
                     )}
                     {availabilitySlots && (
                       <div className="space-y-3 rounded-lg bg-secondary p-4">
                         <p className="text-sm text-muted-foreground">
-                          Duracao considerada: {durationMinutes} min. Total encontrado: {availabilitySlots.length}.
+                          Duração considerada: {durationMinutes} min. Total encontrado: {availabilitySlots.length}.
                         </p>
                         <div className="flex flex-wrap gap-2">
                           {availabilitySlots.length === 0 ? (
                             <p className="text-sm text-muted-foreground">
-                              {availabilityEmptyReason || "Nenhum horario disponivel."}
+                              {availabilityEmptyReason || "Nenhum horário disponível."}
                             </p>
                           ) : (
                             availabilitySlots.map((slot) => (

@@ -29,20 +29,20 @@ import { cn } from "@/lib/utils";
 
 const clientSchema = z.object({
   name: z.string().min(3, "Informe seu nome."),
-  whatsapp: z.string().min(10, "Informe um WhatsApp valido."),
-  email: z.string().email("E-mail invalido.").optional().or(z.literal("")),
+  whatsapp: z.string().min(10, "Informe um WhatsApp válido."),
+  email: z.string().email("E-mail inválido.").optional().or(z.literal("")),
   note: z.string().optional(),
 });
 
 type ClientForm = z.infer<typeof clientSchema>;
 
-const steps = ["Servico", "Profissional", "Data", "Horario", "Dados"];
+const steps = ["Serviço", "Profissional", "Data", "Horário", "Dados"];
 
 export function BookingFlow() {
   const router = useRouter();
   const [serviceId, setServiceId] = useState("consulta-inicial");
   const [professionalId, setProfessionalId] = useState("camila");
-  const [date, setDate] = useState("Amanha");
+  const [date, setDate] = useState("Amanhã");
   const [time, setTime] = useState("09:30");
   const form = useForm<ClientForm>({
     resolver: zodResolver(clientSchema),
@@ -84,7 +84,7 @@ export function BookingFlow() {
           <CardContent className="p-5">
             <h2 className="flex items-center gap-2 text-xl font-semibold text-slate-950">
               <Scissors className="size-5 text-primary" />
-              Escolha o servico
+              Escolha o serviço
             </h2>
             <div className="mt-4 grid gap-3 md:grid-cols-2">
               {services.map((service) => (
@@ -166,7 +166,7 @@ export function BookingFlow() {
             <CardContent className="p-5">
               <h2 className="flex items-center gap-2 text-xl font-semibold text-slate-950">
                 <Clock className="size-5 text-primary" />
-                Horario
+                Horário
               </h2>
               <div className="mt-4 grid grid-cols-3 gap-3">
                 {timeSlots.slice(0, 6).map((slot) => (
@@ -205,15 +205,15 @@ export function BookingFlow() {
               </div>
               <div className="space-y-2 sm:col-span-2">
                 <Label>E-mail opcional</Label>
-                <Input {...form.register("email")} placeholder="voce@email.com" />
+                <Input {...form.register("email")} placeholder="você@email.com" />
                 {form.formState.errors.email && <p className="text-sm text-destructive">{form.formState.errors.email.message}</p>}
               </div>
               <div className="space-y-2 sm:col-span-2">
-                <Label>Observacao opcional</Label>
+                <Label>Observação opcional</Label>
                 <Textarea {...form.register("note")} placeholder="Algo que o profissional deva saber?" />
               </div>
               <Button type="submit" className="sm:col-span-2">
-                Visualizar confirmacao demonstrativa
+                Visualizar confirmação demonstrativa
               </Button>
             </form>
           </CardContent>
@@ -230,13 +230,13 @@ export function BookingFlow() {
             </div>
             <div className="space-y-3 rounded-lg bg-secondary p-4 text-sm">
               <p>
-                <strong>Servico:</strong> {getService(serviceId)?.name}
+                <strong>Serviço:</strong> {getService(serviceId)?.name}
               </p>
               <p>
                 <strong>Profissional:</strong> {getProfessional(professionalId)?.name}
               </p>
               <p>
-                <strong>Data e horario:</strong> {date}, {time}
+                <strong>Data e horário:</strong> {date}, {time}
               </p>
               {variation && (
                 <p>
@@ -256,7 +256,7 @@ export function BookingFlow() {
               </div>
             </div>
             <p className="text-xs leading-5 text-muted-foreground">
-              Esta tela demonstra a experiencia do cliente. Nenhuma reserva real sera armazenada.
+              Esta tela demonstra a experiência do cliente. Nenhuma reserva real será armazenada.
             </p>
           </CardContent>
         </Card>

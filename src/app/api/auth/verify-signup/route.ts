@@ -15,14 +15,14 @@ const schema = z.object({
 
 export async function POST(request: Request) {
   if (!isSupabaseConfigured()) {
-    return NextResponse.json({ error: "Supabase nao configurado." }, { status: 500 });
+    return NextResponse.json({ error: "Supabase não configurado." }, { status: 500 });
   }
 
   const body = await request.json().catch(() => null);
   const parsed = schema.safeParse(body);
 
   if (!parsed.success) {
-    return NextResponse.json({ error: "Informe o codigo completo recebido por e-mail." }, { status: 400 });
+    return NextResponse.json({ error: "Informe o código completo recebido por e-mail." }, { status: 400 });
   }
 
   clearSupabaseAuthCookieStore(await cookies());
