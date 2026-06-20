@@ -23,7 +23,7 @@ const schema = z.object({
   name: z.string().min(2, "Informe o nome do estabelecimento."),
   slug: z
     .string()
-    .min(2, "Informe um slug.")
+    .min(2, "Informe o nome do link.")
     .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Use apenas letras, numeros e hifens."),
   segment: z.string().optional(),
   whatsapp: z.string().optional(),
@@ -79,7 +79,7 @@ export function SettingsView({ business }: { business: AppBusiness }) {
         setMessage({
           type: "error",
           text: error.code === "23505"
-            ? "Este slug ja esta em uso. Escolha outro."
+            ? "Este nome do link ja esta em uso. Escolha outro."
             : "Nao foi possivel salvar as configuracoes.",
         });
         return;
@@ -173,7 +173,7 @@ export function SettingsView({ business }: { business: AppBusiness }) {
                 )}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="business-slug">Slug publico</Label>
+                <Label htmlFor="business-slug">Nome do link</Label>
                 <Input id="business-slug" {...form.register("slug")} />
                 {form.formState.errors.slug && (
                   <p className="text-sm text-destructive">{form.formState.errors.slug.message}</p>
