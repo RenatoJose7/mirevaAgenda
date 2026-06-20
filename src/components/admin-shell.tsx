@@ -43,6 +43,7 @@ function NavList() {
           <Link
             key={item.href}
             href={item.href}
+            prefetch={false}
             className={cn(
               "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition",
               active && "bg-primary text-primary-foreground shadow-sm",
@@ -132,7 +133,7 @@ export function AdminShell({
             </div>
             <div className="flex items-center gap-2">
               <Badge variant="secondary">Teste</Badge>
-              <Link href="/notificacoes">
+              <Link href="/notificacoes" prefetch={false}>
                 <Button variant="outline" size="icon" aria-label="Ver notificacoes" className="relative">
                   <Bell className="size-4" />
                   <span className="absolute -right-1 -top-1 grid size-5 place-items-center rounded-full bg-primary text-[10px] text-primary-foreground">
@@ -140,11 +141,11 @@ export function AdminShell({
                   </span>
                 </Button>
               </Link>
-              <Link href="/auth/logout">
-                <Button variant="outline" size="icon" aria-label="Sair">
+              <form action="/auth/logout" method="post">
+                <Button type="submit" variant="outline" size="icon" aria-label="Sair">
                   <LogOut className="size-4" />
                 </Button>
-              </Link>
+              </form>
             </div>
           </div>
         </header>
