@@ -15,7 +15,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { getCurrentBusiness } from "@/lib/auth/client";
 import { translateAuthError } from "@/lib/auth/messages";
 import { sanitizeAuthRedirectPath } from "@/lib/auth/redirect";
 import { createClient } from "@/lib/supabase/client";
@@ -44,19 +43,23 @@ export function LoginForm() {
     setMessage(null);
 
     try {
-      const supabase = createClient();
-      const { error } = await supabase.auth.signInWithPassword({
-        email: values.email,
-        password: values.password,
+      const response = await fetch("/api/auth/password-login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: values.email,
+          password: values.password,
+          next: nextPath,
+        }),
       });
+      const payload = (await response.json().catch(() => null)) as { redirectTo?: string; error?: string } | null;
 
-      if (error) {
-        setMessage(translateAuthError(error.message));
+      if (!response.ok) {
+        setMessage(payload?.error ?? "Nao foi possivel entrar. Verifique os dados e tente novamente.");
         return;
       }
 
-      const business = await getCurrentBusiness(supabase);
-      window.location.assign(business ? nextPath : "/onboarding");
+      window.location.assign(payload?.redirectTo ?? "/dashboard");
     } catch {
       setMessage("Supabase nao configurado. Preencha o .env.local para ativar login real.");
     } finally {

@@ -107,19 +107,22 @@ export default function CadastroPage() {
     setMessage(null);
 
     try {
-      const supabase = createClient();
-      const { error } = await supabase.auth.verifyOtp({
-        email: pendingEmail,
-        token,
-        type: "signup",
+      const response = await fetch("/api/auth/verify-signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: pendingEmail,
+          token,
+        }),
       });
+      const payload = (await response.json().catch(() => null)) as { redirectTo?: string; error?: string } | null;
 
-      if (error) {
-        setMessage({ type: "error", text: translateAuthError(error.message) });
+      if (!response.ok) {
+        setMessage({ type: "error", text: payload?.error ?? "Nao foi possivel verificar o codigo." });
         return;
       }
 
-      window.location.assign("/onboarding");
+      window.location.assign(payload?.redirectTo ?? "/onboarding");
     } catch {
       setMessage({
         type: "error",
