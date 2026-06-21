@@ -12,6 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { subscriptionPlans, type PlanId } from "@/lib/plans";
 import { themes } from "@/lib/themes";
 import { useThemeStyle } from "@/lib/use-theme-style";
 import { cn } from "@/lib/utils";
@@ -34,6 +35,7 @@ export function OnboardingForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreviewUrl, setLogoPreviewUrl] = useState<string | null>(null);
+  const [selectedPlan, setSelectedPlan] = useState<PlanId | null>(null);
   const themeStyle = useThemeStyle(theme);
   const form = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -47,6 +49,11 @@ export function OnboardingForm() {
   });
 
   async function handleSubmit(values: FormData) {
+    if (!selectedPlan) {
+      setMessage("Escolha um plano para continuar.");
+      return;
+    }
+
     setIsSubmitting(true);
     setMessage(null);
 
@@ -63,6 +70,7 @@ export function OnboardingForm() {
           address: values.address || null,
           themeKey: theme,
           bookingConfirmationMode: mode,
+          planId: selectedPlan,
         }),
       });
 
@@ -96,6 +104,49 @@ export function OnboardingForm() {
           </p>
         </CardHeader>
         <CardContent className="grid gap-6 lg:grid-cols-[1fr_0.9fr]">
+          <div className="space-y-3 lg:col-span-2">
+            <div>
+              <Label>Escolha o plano inicial</Label>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Você poderá alterar o plano depois nas configurações.
+              </p>
+            </div>
+            <div className="grid gap-3 lg:grid-cols-3">
+              {subscriptionPlans.map((plan) => (
+                <button
+                  key={plan.id}
+                  type="button"
+                  aria-pressed={selectedPlan === plan.id}
+                  onClick={() => {
+                    setSelectedPlan(plan.id);
+                    setMessage(null);
+                  }}
+                  className={cn(
+                    "flex h-full flex-col rounded-lg border bg-white p-4 text-left transition hover:border-primary/70",
+                    selectedPlan === plan.id && "border-primary ring-2 ring-primary/15",
+                  )}
+                >
+                  <span className="flex items-start justify-between gap-3">
+                    <span>
+                      <span className="block font-semibold text-slate-950">{plan.name}</span>
+                      <span className="mt-1 block text-2xl font-semibold text-slate-950">{plan.priceLabel}</span>
+                    </span>
+                    {plan.highlight && (
+                      <span className="rounded-full bg-primary/10 px-2 py-1 text-xs font-semibold text-primary">
+                        {plan.highlight}
+                      </span>
+                    )}
+                  </span>
+                  <span className="mt-3 block text-sm text-muted-foreground">{plan.description}</span>
+                  <span className="mt-4 grid gap-2 text-sm text-slate-700">
+                    {plan.features.map((feature) => (
+                      <span key={feature}>- {feature}</span>
+                    ))}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
           <form id="onboarding-form" className="space-y-5" onSubmit={form.handleSubmit(handleSubmit)}>
           {message && <AuthNotice message={message} />}
           <div className="grid gap-4 sm:grid-cols-2">

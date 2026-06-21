@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getCurrentUser } from "@/lib/auth/server";
+import { planIds } from "@/lib/plans";
 import { createAdminClient, getAdminClientDiagnostics } from "@/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
@@ -15,6 +16,7 @@ const schema = z.object({
   address: z.string().trim().max(180).optional().nullable(),
   themeKey: z.enum(allowedThemes),
   bookingConfirmationMode: z.enum(allowedModes),
+  planId: z.enum(planIds),
 });
 
 export async function POST(request: Request) {
@@ -93,7 +95,22 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Não foi possível vincular o usuario ao estabelecimento." }, { status: 500 });
   }
 
-  return NextResponse.json({ business });
+  const { data: subscription, error: subscriptionError } = await admin
+    .from("business_subscriptions")
+    .insert({
+      business_id: business.id,
+      plan_id: input.planId,
+      status: "trialing",
+    })
+    .select("id,business_id,plan_id,status,max_professionals,max_services")
+    .single();
+
+  if (subscriptionError || !subscription) {
+    await admin.from("businesses").delete().eq("id", business.id);
+    return NextResponse.json({ error: getSubscriptionMessage(subscriptionError?.message) }, { status: 500 });
+  }
+
+  return NextResponse.json({ business, subscription });
 }
 
 async function getAvailableSlug(admin: ReturnType<typeof createAdminClient>, name: string) {
@@ -170,6 +187,20 @@ function getDatabaseMessage(message?: string) {
   }
 
   return "Não foi possível criar o estabelecimento.";
+}
+
+function getSubscriptionMessage(message?: string) {
+  const normalized = message?.toLowerCase() ?? "";
+
+  if (isSchemaCacheError(message) || normalized.includes("business_subscriptions")) {
+    return "A migration de planos ainda n\u00e3o foi aplicada no Supabase. Aplique as migrations e tente novamente.";
+  }
+
+  if (normalized.includes("plano") || normalized.includes("plan")) {
+    return "O plano selecionado n\u00e3o est\u00e1 dispon\u00edvel. Escolha outro plano e tente novamente.";
+  }
+
+  return "N\u00e3o foi poss\u00edvel salvar o plano inicial do estabelecimento.";
 }
 
 function getSchemaMessage(message?: string) {
