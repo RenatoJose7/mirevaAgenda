@@ -1,8 +1,10 @@
 import { createClient } from "@/lib/supabase/server";
 import type {
   AppointmentRecord,
+  BusinessSubscriptionRecord,
   BookingSettingsRecord,
   InternalNotificationRecord,
+  PlanUsage,
   ProfessionalRecord,
   ProfessionalBreakRecord,
   ProfessionalServiceRecord,
@@ -58,6 +60,35 @@ export async function getProfessionalServicesForBusiness(businessId: string) {
   }
 
   return (data ?? []) as ProfessionalServiceRecord[];
+}
+
+export async function getPlanUsageForBusiness(businessId: string): Promise<PlanUsage> {
+  const supabase = await createClient();
+  const [subscriptionResult, professionalsResult, servicesResult] = await Promise.all([
+    supabase
+      .from("business_subscriptions")
+      .select(
+        "id,business_id,plan_id,status,max_professionals,max_services,current_period_started_at,current_period_ends_at,trial_ends_at,provider,provider_customer_id,provider_subscription_id,canceled_at,created_at,updated_at",
+      )
+      .eq("business_id", businessId)
+      .maybeSingle(),
+    supabase
+      .from("professionals")
+      .select("id", { count: "exact", head: true })
+      .eq("business_id", businessId)
+      .is("deleted_at", null),
+    supabase
+      .from("services")
+      .select("id", { count: "exact", head: true })
+      .eq("business_id", businessId)
+      .is("deleted_at", null),
+  ]);
+
+  return {
+    subscription: (subscriptionResult.data as BusinessSubscriptionRecord | null) ?? null,
+    professionalsCount: professionalsResult.count ?? 0,
+    servicesCount: servicesResult.count ?? 0,
+  };
 }
 
 export async function getWorkingHoursForBusiness(businessId: string) {

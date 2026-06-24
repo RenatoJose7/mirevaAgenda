@@ -64,6 +64,8 @@ export function ServicesManager({
   initialServices,
   initialProfessionals,
   initialLinks,
+  planName,
+  maxServices,
 }: {
   businessId: string;
   businessName: string;
@@ -71,6 +73,8 @@ export function ServicesManager({
   initialServices: ServiceRecord[];
   initialProfessionals: ProfessionalRecord[];
   initialLinks: ProfessionalServiceRecord[];
+  planName: string;
+  maxServices: number;
 }) {
   const [services, setServices] = useState(initialServices);
   const [professionals] = useState(initialProfessionals);
@@ -86,6 +90,8 @@ export function ServicesManager({
     () => professionals.filter((professional) => professional.is_active),
     [professionals],
   );
+  const totalCount = services.length;
+  const limitReached = totalCount >= maxServices;
 
   const form = useForm<ServiceForm>({
     resolver: zodResolver(serviceSchema),
@@ -137,6 +143,16 @@ export function ServicesManager({
   }
 
   function startCreate() {
+    if (limitReached) {
+      setEditing(null);
+      setIsFormOpen(false);
+      setMessage({
+        type: "error",
+        text: `Seu plano ${planName} permite até ${maxServices} serviço${maxServices === 1 ? "" : "s"}. Para adicionar mais, altere o plano em Configurações.`,
+      });
+      return;
+    }
+
     setEditing(null);
     form.reset(emptyForm);
     setAssociationDraft(buildAssociationDraft(null));
@@ -243,7 +259,7 @@ export function ServicesManager({
             .single();
 
       if (result.error || !result.data) {
-        setMessage({ type: "error", text: "Não foi possível salvar o serviço." });
+        setMessage({ type: "error", text: getServiceSaveError(result.error?.message, planName, maxServices) });
         setIsSubmitting(false);
         return;
       }
@@ -316,8 +332,13 @@ export function ServicesManager({
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">{businessName}</p>
             <h1 className="mt-2 text-2xl font-semibold text-slate-950">Serviços cadastrados</h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              Configure preço, duração e quais profissionais podem realizar cada serviço.
+              Serviços: {totalCount}/{maxServices}. Configure preço, duração e quais profissionais podem realizar cada serviço.
             </p>
+            {totalCount > maxServices && (
+              <p className="mt-1 text-sm text-amber-700">
+                Uso acima do plano atual. Os serviços existentes continuam funcionando, mas novos cadastros ficam bloqueados.
+              </p>
+            )}
           </div>
           <Button onClick={startCreate}>
             <Plus className="size-4" />
@@ -567,4 +588,14 @@ export function ServicesManager({
       </div>
     </AdminShell>
   );
+}
+
+function getServiceSaveError(message: string | undefined, planName: string, maxServices: number) {
+  const normalized = message?.toLowerCase() ?? "";
+
+  if (normalized.includes("limite do plano")) {
+    return `Seu plano ${planName} permite até ${maxServices} serviço${maxServices === 1 ? "" : "s"}. Para adicionar mais, altere o plano em Configurações.`;
+  }
+
+  return "Não foi possível salvar o serviço.";
 }

@@ -38,6 +38,30 @@ export type ProfessionalServiceRecord = {
   updated_at: string;
 };
 
+export type BusinessSubscriptionRecord = {
+  id: string;
+  business_id: string;
+  plan_id: "basic" | "plus" | "business";
+  status: "trialing" | "pending" | "active" | "canceled" | "past_due";
+  max_professionals: number;
+  max_services: number;
+  current_period_started_at: string | null;
+  current_period_ends_at: string | null;
+  trial_ends_at: string | null;
+  provider: string | null;
+  provider_customer_id: string | null;
+  provider_subscription_id: string | null;
+  canceled_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type PlanUsage = {
+  subscription: BusinessSubscriptionRecord | null;
+  professionalsCount: number;
+  servicesCount: number;
+};
+
 export type WorkingHourRecord = {
   id: string;
   business_id: string;

@@ -58,11 +58,15 @@ export function ProfessionalsManager({
   businessName,
   themeKey,
   initialProfessionals,
+  planName,
+  maxProfessionals,
 }: {
   businessId: string;
   businessName: string;
   themeKey?: string | null;
   initialProfessionals: ProfessionalRecord[];
+  planName: string;
+  maxProfessionals: number;
 }) {
   const [professionals, setProfessionals] = useState(initialProfessionals);
   const [editing, setEditing] = useState<ProfessionalRecord | null>(null);
@@ -72,6 +76,8 @@ export function ProfessionalsManager({
   const [professionalToRemove, setProfessionalToRemove] = useState<ProfessionalRecord | null>(null);
 
   const activeCount = useMemo(() => professionals.filter((item) => item.is_active).length, [professionals]);
+  const totalCount = professionals.length;
+  const limitReached = totalCount >= maxProfessionals;
   const form = useForm<ProfessionalForm>({
     resolver: zodResolver(professionalSchema),
     defaultValues: emptyForm,
@@ -93,6 +99,16 @@ export function ProfessionalsManager({
   }
 
   function startCreate() {
+    if (limitReached) {
+      setEditing(null);
+      setIsFormOpen(false);
+      setMessage({
+        type: "error",
+        text: `Seu plano ${planName} permite até ${maxProfessionals} profissional${maxProfessionals === 1 ? "" : "s"}. Para adicionar mais, altere o plano em Configurações.`,
+      });
+      return;
+    }
+
     setEditing(null);
     form.reset(emptyForm);
     setIsFormOpen(true);
@@ -128,7 +144,7 @@ export function ProfessionalsManager({
       : await supabase.from("professionals").insert({ ...payload, business_id: businessId });
 
     if (result.error) {
-      setMessage({ type: "error", text: "Não foi possível salvar o profissional." });
+      setMessage({ type: "error", text: getProfessionalSaveError(result.error.message, planName, maxProfessionals) });
       setIsSubmitting(false);
       return;
     }
@@ -192,8 +208,13 @@ export function ProfessionalsManager({
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">{businessName}</p>
             <h1 className="mt-2 text-2xl font-semibold text-slate-950">Profissionais cadastrados</h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              {activeCount} ativo{activeCount === 1 ? "" : "s"} nesta conta.
+              Profissionais: {totalCount}/{maxProfessionals}. {activeCount} ativo{activeCount === 1 ? "" : "s"} nesta conta.
             </p>
+            {totalCount > maxProfessionals && (
+              <p className="mt-1 text-sm text-amber-700">
+                Uso acima do plano atual. Os profissionais existentes continuam funcionando, mas novos cadastros ficam bloqueados.
+              </p>
+            )}
           </div>
           <Button onClick={startCreate}>
             <Plus className="size-4" />
@@ -344,4 +365,14 @@ export function ProfessionalsManager({
       </div>
     </AdminShell>
   );
+}
+
+function getProfessionalSaveError(message: string | undefined, planName: string, maxProfessionals: number) {
+  const normalized = message?.toLowerCase() ?? "";
+
+  if (normalized.includes("limite do plano")) {
+    return `Seu plano ${planName} permite até ${maxProfessionals} profissional${maxProfessionals === 1 ? "" : "s"}. Para adicionar mais, altere o plano em Configurações.`;
+  }
+
+  return "Não foi possível salvar o profissional.";
 }

@@ -50,6 +50,14 @@ export const subscriptionPlans: SubscriptionPlan[] = [
   },
 ];
 
+export const subscriptionStatusLabels: Record<SubscriptionStatus, string> = {
+  trialing: "Teste",
+  pending: "Pagamento pendente",
+  active: "Ativo",
+  canceled: "Cancelado",
+  past_due: "Pagamento atrasado",
+};
+
 export function getSubscriptionPlan(planId: string | null | undefined) {
   return subscriptionPlans.find((plan) => plan.id === planId) ?? subscriptionPlans[0];
 }
