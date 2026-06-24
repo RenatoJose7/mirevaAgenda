@@ -51,6 +51,15 @@ export type BusinessSubscriptionRecord = {
   provider: string | null;
   provider_customer_id: string | null;
   provider_subscription_id: string | null;
+  provider_plan_id: string | null;
+  provider_checkout_id: string | null;
+  provider_payment_method: string | null;
+  provider_status: string | null;
+  started_at: string | null;
+  renews_at: string | null;
+  cancel_requested_at: string | null;
+  cancel_at_period_end: boolean;
+  metadata: Record<string, unknown>;
   canceled_at: string | null;
   created_at: string;
   updated_at: string;
@@ -60,6 +69,24 @@ export type PlanUsage = {
   subscription: BusinessSubscriptionRecord | null;
   professionalsCount: number;
   servicesCount: number;
+};
+
+export type PaymentWebhookEventRecord = {
+  id: string;
+  provider: string;
+  provider_event_id: string | null;
+  event_type: string;
+  business_id: string | null;
+  subscription_id: string | null;
+  payload: Record<string, unknown>;
+  headers: Record<string, unknown>;
+  signature_hash: string | null;
+  processing_status: "received" | "ignored" | "processed" | "failed";
+  received_at: string;
+  processed_at: string | null;
+  error_message: string | null;
+  created_at: string;
+  updated_at: string;
 };
 
 export type WorkingHourRecord = {
