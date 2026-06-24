@@ -103,6 +103,7 @@ export async function POST(request: Request) {
       plan_id: input.planId,
       billing_cycle: input.billingCycle,
       status: "trialing",
+      trial_ends_at: getTrialEndsAt(),
     })
     .select("id,business_id,plan_id,billing_cycle,status,max_professionals,max_services")
     .single();
@@ -175,6 +176,12 @@ function slugify(value: string) {
 function normalizeOptional(value?: string | null) {
   const trimmed = value?.trim();
   return trimmed ? trimmed : null;
+}
+
+function getTrialEndsAt() {
+  const trialEndsAt = new Date();
+  trialEndsAt.setDate(trialEndsAt.getDate() + 30);
+  return trialEndsAt.toISOString();
 }
 
 function getDatabaseMessage(message?: string) {

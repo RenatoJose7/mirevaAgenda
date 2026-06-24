@@ -57,7 +57,6 @@ export function OnboardingForm() {
     },
   });
   const selectedPlanData = subscriptionPlans.find((plan) => plan.id === selectedPlan) ?? subscriptionPlans[0];
-  const businessName = form.watch("name") || "Seu estabelecimento";
 
   async function handleContinueToPlan() {
     const isValid = await form.trigger();
@@ -265,100 +264,91 @@ export function OnboardingForm() {
               </>
             ) : (
               <div className="space-y-6">
-                <div className="grid gap-4 lg:grid-cols-[0.65fr_1fr]">
-                  <div className="rounded-lg border bg-secondary p-4">
-                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Resumo</p>
-                    <h3 className="mt-2 text-xl font-semibold text-slate-950">{businessName}</h3>
+                <div className="space-y-5">
+                  <div className="mx-auto max-w-3xl text-center">
+                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary">Teste grátis</p>
+                    <h3 className="mt-2 text-2xl font-semibold text-slate-950 md:text-3xl">
+                      Experimente o {selectedPlanData.name} gratuitamente por 1 mês
+                    </h3>
                     <p className="mt-2 text-sm text-muted-foreground">
-                      Escolha o plano inicial. Ele poderá ser alterado nas configurações antes da cobrança real.
+                      Escolha o plano inicial agora. A cobrança real pelo Asaas entra na próxima etapa.
                     </p>
-                    <div className="mt-4 grid gap-2 text-sm">
-                      <span className="flex items-center gap-2">
-                        <CheckCircle2 className="size-4 text-primary" />
-                        Tema e dados do estabelecimento definidos
-                      </span>
-                      <span className="flex items-center gap-2">
-                        <CheckCircle2 className="size-4 text-primary" />
-                        Cobrança pelo Asaas entra na próxima etapa
-                      </span>
-                    </div>
                   </div>
 
-                  <div className="space-y-4">
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                      <div>
-                        <Label>Escolha o plano inicial</Label>
-                        <p className="mt-1 text-sm text-muted-foreground">Mensal para começar leve ou anual com 2 meses grátis.</p>
-                      </div>
-                      <div className="grid grid-cols-2 rounded-lg border bg-white p-1 text-sm">
-                        {[
-                          ["monthly", "Mensal"],
-                          ["annual", "Anual"],
-                        ].map(([id, label]) => (
-                          <button
-                            key={id}
-                            type="button"
-                            onClick={() => setBillingCycle(id as BillingCycle)}
-                            className={cn(
-                              "rounded-md px-4 py-2 font-medium transition",
-                              billingCycle === id ? "bg-primary text-primary-foreground" : "text-muted-foreground",
-                            )}
-                          >
-                            {label}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
+                  <div className="mx-auto grid w-full max-w-xs grid-cols-2 rounded-lg border bg-white p-1 text-sm">
+                    {[
+                      ["monthly", "Mensal"],
+                      ["annual", "Anual"],
+                    ].map(([id, label]) => (
+                      <button
+                        key={id}
+                        type="button"
+                        onClick={() => setBillingCycle(id as BillingCycle)}
+                        className={cn(
+                          "rounded-md px-4 py-2 font-medium transition",
+                          billingCycle === id ? "bg-primary text-primary-foreground" : "text-muted-foreground",
+                        )}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
 
-                    <div className="grid gap-3 lg:grid-cols-3">
-                      {subscriptionPlans.map((plan) => {
-                        const isSelected = selectedPlan === plan.id;
+                  <div className="grid gap-4 lg:grid-cols-3">
+                    {subscriptionPlans.map((plan) => {
+                      const isSelected = selectedPlan === plan.id;
 
-                        return (
-                          <button
-                            key={plan.id}
-                            type="button"
-                            aria-pressed={isSelected}
-                            onClick={() => {
-                              setSelectedPlan(plan.id);
-                              setMessage(null);
-                            }}
-                            className={cn(
-                              "flex h-full flex-col rounded-lg border bg-white p-4 text-left transition hover:border-primary/70",
-                              isSelected && "border-primary ring-2 ring-primary/15",
-                            )}
-                          >
-                            <span className="flex items-start justify-between gap-3">
-                              <span>
-                                <span className="block font-semibold text-slate-950">{plan.name}</span>
-                                <span className="mt-1 block text-2xl font-semibold text-slate-950">
-                                  {getPlanPriceLabel(plan, billingCycle)}
-                                </span>
+                      return (
+                        <button
+                          key={plan.id}
+                          type="button"
+                          aria-pressed={isSelected}
+                          onClick={() => {
+                            setSelectedPlan(plan.id);
+                            setMessage(null);
+                          }}
+                          className={cn(
+                            "relative flex min-h-[520px] flex-col rounded-lg border bg-white p-5 text-left transition hover:border-primary/70",
+                            isSelected && "border-primary bg-primary/5 ring-2 ring-primary/20",
+                          )}
+                        >
+                          <span className="flex min-h-8 items-start justify-between gap-3">
+                            <span className="block text-xl font-semibold text-slate-950">{plan.name}</span>
+                            {plan.highlight && (
+                              <span className="rounded-full bg-primary/10 px-2 py-1 text-xs font-semibold text-primary">
+                                {plan.highlight}
                               </span>
-                              {plan.highlight && (
-                                <span className="rounded-full bg-primary/10 px-2 py-1 text-xs font-semibold text-primary">
-                                  {plan.highlight}
-                                </span>
-                              )}
+                            )}
+                          </span>
+                          <span className="mt-6 block">
+                            <span className="text-sm text-muted-foreground">Depois do teste</span>
+                            <span className="mt-1 block text-3xl font-semibold leading-tight text-slate-950">
+                              {getPlanPriceLabel(plan, billingCycle)}
                             </span>
                             <span className="mt-2 block text-xs font-medium text-primary">
-                              {getPlanCycleHelper(plan, billingCycle)}
+                              Primeiro mês grátis
                             </span>
-                            <span className="mt-3 block text-sm text-muted-foreground">{plan.description}</span>
-                            <span className="mt-4 grid gap-2 text-sm text-slate-700">
-                              {plan.features.map((feature) => (
-                                <span key={feature}>- {feature}</span>
-                              ))}
-                            </span>
-                          </button>
-                        );
-                      })}
-                    </div>
+                          </span>
+                          <span className="mt-5 block min-h-16 text-sm text-muted-foreground">{plan.description}</span>
+                          <span className="mt-5 grid gap-3 text-sm text-slate-700">
+                            {plan.features.map((feature) => (
+                              <span key={feature} className="flex items-start gap-2">
+                                <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-primary" />
+                                <span>{feature}</span>
+                              </span>
+                            ))}
+                          </span>
+                          <span className="mt-auto pt-6 text-xs text-muted-foreground">
+                            {getPlanCycleHelper(plan, billingCycle)}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
 
-                    <div className="rounded-lg border bg-white p-4 text-sm text-muted-foreground">
-                      Plano selecionado: <strong className="text-slate-950">{selectedPlanData.name}</strong> em{" "}
-                      <strong className="text-slate-950">{billingCycle === "annual" ? "ciclo anual" : "ciclo mensal"}</strong>.
-                    </div>
+                  <div className="rounded-lg border bg-white p-4 text-center text-sm text-muted-foreground">
+                    Plano selecionado: <strong className="text-slate-950">{selectedPlanData.name}</strong> em{" "}
+                    <strong className="text-slate-950">{billingCycle === "annual" ? "ciclo anual" : "ciclo mensal"}</strong>.
                   </div>
                 </div>
 
