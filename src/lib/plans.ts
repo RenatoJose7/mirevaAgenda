@@ -1,6 +1,7 @@
 export const planIds = ["basic", "plus", "business"] as const;
 
 export type PlanId = (typeof planIds)[number];
+export type BillingCycle = "monthly" | "annual";
 
 export type SubscriptionStatus = "trialing" | "pending" | "active" | "canceled" | "past_due";
 
@@ -9,6 +10,8 @@ export type SubscriptionPlan = {
   name: string;
   priceCents: number;
   priceLabel: string;
+  annualPriceCents: number;
+  annualPriceLabel: string;
   description: string;
   maxProfessionals: number;
   maxServices: number;
@@ -22,6 +25,8 @@ export const subscriptionPlans: SubscriptionPlan[] = [
     name: "Básico",
     priceCents: 1500,
     priceLabel: "R$ 15/mês",
+    annualPriceCents: 15000,
+    annualPriceLabel: "R$ 150/ano",
     description: "Para autônomos que querem começar com uma agenda simples.",
     maxProfessionals: 1,
     maxServices: 5,
@@ -32,6 +37,8 @@ export const subscriptionPlans: SubscriptionPlan[] = [
     name: "Plus",
     priceCents: 3000,
     priceLabel: "R$ 30/mês",
+    annualPriceCents: 30000,
+    annualPriceLabel: "R$ 300/ano",
     description: "Para pequenas equipes que precisam organizar mais atendimentos.",
     maxProfessionals: 5,
     maxServices: 20,
@@ -43,6 +50,8 @@ export const subscriptionPlans: SubscriptionPlan[] = [
     name: "Business",
     priceCents: 5990,
     priceLabel: "R$ 59,90/mês",
+    annualPriceCents: 59900,
+    annualPriceLabel: "R$ 599/ano",
     description: "Para negócios com operação maior e mais capacidade.",
     maxProfessionals: 15,
     maxServices: 60,
@@ -60,4 +69,16 @@ export const subscriptionStatusLabels: Record<SubscriptionStatus, string> = {
 
 export function getSubscriptionPlan(planId: string | null | undefined) {
   return subscriptionPlans.find((plan) => plan.id === planId) ?? subscriptionPlans[0];
+}
+
+export function getPlanPriceLabel(plan: SubscriptionPlan, billingCycle: BillingCycle) {
+  return billingCycle === "annual" ? plan.annualPriceLabel : plan.priceLabel;
+}
+
+export function getPlanCycleHelper(plan: SubscriptionPlan, billingCycle: BillingCycle) {
+  if (billingCycle === "annual") {
+    return `Equivale a 10 meses no plano ${plan.name}.`;
+  }
+
+  return "Cobrança mensal, sem fidelidade.";
 }

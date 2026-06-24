@@ -17,6 +17,7 @@ const schema = z.object({
   themeKey: z.enum(allowedThemes),
   bookingConfirmationMode: z.enum(allowedModes),
   planId: z.enum(planIds),
+  billingCycle: z.enum(["monthly", "annual"]),
 });
 
 export async function POST(request: Request) {
@@ -100,9 +101,10 @@ export async function POST(request: Request) {
     .insert({
       business_id: business.id,
       plan_id: input.planId,
+      billing_cycle: input.billingCycle,
       status: "trialing",
     })
-    .select("id,business_id,plan_id,status,max_professionals,max_services")
+    .select("id,business_id,plan_id,billing_cycle,status,max_professionals,max_services")
     .single();
 
   if (subscriptionError || !subscription) {

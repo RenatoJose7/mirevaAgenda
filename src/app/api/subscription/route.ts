@@ -8,6 +8,7 @@ export const dynamic = "force-dynamic";
 
 const schema = z.object({
   planId: z.enum(planIds),
+  billingCycle: z.enum(["monthly", "annual"]).optional(),
 });
 
 export async function PATCH(request: Request) {
@@ -55,7 +56,7 @@ export async function PATCH(request: Request) {
 
   const { data: currentSubscription } = await admin
     .from("business_subscriptions")
-    .select("status")
+    .select("status,billing_cycle")
     .eq("business_id", business.id)
     .maybeSingle();
 
@@ -65,12 +66,13 @@ export async function PATCH(request: Request) {
       {
         business_id: business.id,
         plan_id: parsed.data.planId,
+        billing_cycle: parsed.data.billingCycle ?? currentSubscription?.billing_cycle ?? "monthly",
         status: currentSubscription?.status ?? "trialing",
       },
       { onConflict: "business_id" },
     )
     .select(
-      "id,business_id,plan_id,status,max_professionals,max_services,current_period_started_at,current_period_ends_at,trial_ends_at,provider,provider_customer_id,provider_subscription_id,provider_plan_id,provider_checkout_id,provider_payment_method,provider_status,started_at,renews_at,cancel_requested_at,cancel_at_period_end,metadata,canceled_at,created_at,updated_at",
+      "id,business_id,plan_id,billing_cycle,status,max_professionals,max_services,current_period_started_at,current_period_ends_at,trial_ends_at,provider,provider_customer_id,provider_subscription_id,provider_plan_id,provider_checkout_id,provider_payment_method,provider_status,started_at,renews_at,cancel_requested_at,cancel_at_period_end,metadata,canceled_at,created_at,updated_at",
     )
     .single();
 

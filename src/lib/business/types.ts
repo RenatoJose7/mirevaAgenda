@@ -42,6 +42,7 @@ export type BusinessSubscriptionRecord = {
   id: string;
   business_id: string;
   plan_id: "basic" | "plus" | "business";
+  billing_cycle: "monthly" | "annual";
   status: "trialing" | "pending" | "active" | "canceled" | "past_due";
   max_professionals: number;
   max_services: number;
