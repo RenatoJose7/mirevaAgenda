@@ -20,7 +20,6 @@ import {
   type BillingCycle,
   type PlanId,
 } from "@/lib/plans";
-import { themes } from "@/lib/themes";
 import { useThemeStyle } from "@/lib/use-theme-style";
 import { cn } from "@/lib/utils";
 
@@ -37,7 +36,6 @@ type FormData = z.infer<typeof schema>;
 export function OnboardingForm() {
   const router = useRouter();
   const [step, setStep] = useState<"business" | "plan">("business");
-  const [theme, setTheme] = useState("mireva");
   const [mode, setMode] = useState<"automatic" | "manual">("automatic");
   const [message, setMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -45,7 +43,7 @@ export function OnboardingForm() {
   const [logoPreviewUrl, setLogoPreviewUrl] = useState<string | null>(null);
   const [selectedPlan, setSelectedPlan] = useState<PlanId>("plus");
   const [billingCycle, setBillingCycle] = useState<BillingCycle>("monthly");
-  const themeStyle = useThemeStyle(theme);
+  const themeStyle = useThemeStyle("mireva");
   const form = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -57,6 +55,8 @@ export function OnboardingForm() {
     },
   });
   const selectedPlanData = subscriptionPlans.find((plan) => plan.id === selectedPlan) ?? subscriptionPlans[0];
+  const trialPeriodLabel = billingCycle === "annual" ? "1 mês" : "1 semana";
+  const trialBadgeLabel = billingCycle === "annual" ? "Primeiro mês grátis" : "Primeira semana grátis";
 
   async function handleContinueToPlan() {
     const isValid = await form.trigger();
@@ -84,7 +84,7 @@ export function OnboardingForm() {
           segment: values.segment || null,
           whatsapp: values.whatsapp || null,
           address: values.address || null,
-          themeKey: theme,
+          themeKey: "mireva",
           bookingConfirmationMode: mode,
           planId: selectedPlan,
           billingCycle,
@@ -152,7 +152,7 @@ export function OnboardingForm() {
           <form id="onboarding-form" className="space-y-6" onSubmit={form.handleSubmit(handleSubmit)}>
             {step === "business" ? (
               <>
-                <div className="grid gap-6 lg:grid-cols-[1fr_0.9fr]">
+                <div className="grid gap-6 lg:grid-cols-[1fr_0.55fr]">
                   <div className="space-y-5">
                     <div className="grid gap-4 sm:grid-cols-2">
                       <div className="space-y-2">
@@ -205,34 +205,8 @@ export function OnboardingForm() {
 
                   <div className="space-y-5">
                     <div>
-                      <Label>Temas prontos</Label>
-                      <div className="mt-3 grid gap-3">
-                        {themes.map((option) => (
-                          <button
-                            key={option.id}
-                            type="button"
-                            onClick={() => setTheme(option.id)}
-                            className={cn(
-                              "flex items-center justify-between rounded-lg border bg-white p-3 text-left transition",
-                              theme === option.id && "border-primary ring-2 ring-primary/15",
-                            )}
-                          >
-                            <span>
-                              <span className="block font-medium text-slate-950">{option.name}</span>
-                              <span className="text-sm text-muted-foreground">{option.description}</span>
-                            </span>
-                            <span className="flex gap-1">
-                              {option.colors.map((color) => (
-                                <span key={color} className="size-5 rounded-full border" style={{ backgroundColor: color }} />
-                              ))}
-                            </span>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                    <div>
                       <Label>Confirmação de reservas</Label>
-                      <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                      <div className="mt-3 grid gap-3">
                         {[
                           ["automatic", "Automática", "Padrão do MVP"],
                           ["manual", "Manual", "Opção visual futura"],
@@ -268,7 +242,7 @@ export function OnboardingForm() {
                   <div className="mx-auto max-w-3xl text-center">
                     <p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary">Teste grátis</p>
                     <h3 className="mt-2 text-2xl font-semibold text-slate-950 md:text-3xl">
-                      Experimente o {selectedPlanData.name} gratuitamente por 1 mês
+                      Experimente o {selectedPlanData.name} gratuitamente por {trialPeriodLabel}
                     </h3>
                     <p className="mt-2 text-sm text-muted-foreground">
                       Escolha o plano inicial agora. A cobrança real pelo Asaas entra na próxima etapa.
@@ -325,9 +299,7 @@ export function OnboardingForm() {
                             <span className="mt-1 block text-3xl font-semibold leading-tight text-slate-950">
                               {getPlanPriceLabel(plan, billingCycle)}
                             </span>
-                            <span className="mt-2 block text-xs font-medium text-primary">
-                              Primeiro mês grátis
-                            </span>
+                            <span className="mt-2 block text-xs font-medium text-primary">{trialBadgeLabel}</span>
                           </span>
                           <span className="mt-5 block min-h-16 text-sm text-muted-foreground">{plan.description}</span>
                           <span className="mt-5 grid gap-3 text-sm text-slate-700">

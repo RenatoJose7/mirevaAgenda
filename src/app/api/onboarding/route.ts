@@ -103,7 +103,7 @@ export async function POST(request: Request) {
       plan_id: input.planId,
       billing_cycle: input.billingCycle,
       status: "trialing",
-      trial_ends_at: getTrialEndsAt(),
+      trial_ends_at: getTrialEndsAt(input.billingCycle),
     })
     .select("id,business_id,plan_id,billing_cycle,status,max_professionals,max_services")
     .single();
@@ -178,9 +178,9 @@ function normalizeOptional(value?: string | null) {
   return trimmed ? trimmed : null;
 }
 
-function getTrialEndsAt() {
+function getTrialEndsAt(billingCycle: "monthly" | "annual") {
   const trialEndsAt = new Date();
-  trialEndsAt.setDate(trialEndsAt.getDate() + 30);
+  trialEndsAt.setDate(trialEndsAt.getDate() + (billingCycle === "annual" ? 30 : 7));
   return trialEndsAt.toISOString();
 }
 
