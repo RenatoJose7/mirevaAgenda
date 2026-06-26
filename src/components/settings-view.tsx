@@ -15,7 +15,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { AppBusiness } from "@/lib/auth/server";
 import { slugify, type BusinessSubscriptionRecord, type PlanUsage } from "@/lib/business/types";
-import { getSubscriptionPlan, subscriptionPlans, subscriptionStatusLabels, type PlanId } from "@/lib/plans";
+import {
+  getPlanPriceLabel,
+  getSubscriptionPlan,
+  subscriptionPlans,
+  subscriptionStatusLabels,
+  type PlanId,
+} from "@/lib/plans";
 import { themes } from "@/lib/themes";
 import { cn } from "@/lib/utils";
 
@@ -45,9 +51,11 @@ export function SettingsView({ business, usage }: { business: AppBusiness; usage
   const [currentPlanId, setCurrentPlanId] = useState<PlanId>(getSubscriptionPlan(usage.subscription?.plan_id).id);
   const [isPlanChooserOpen, setIsPlanChooserOpen] = useState(false);
   const [changingPlanId, setChangingPlanId] = useState<PlanId | null>(null);
+  const [checkoutPlanId, setCheckoutPlanId] = useState<PlanId | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
   const currentPlan = getSubscriptionPlan(currentPlanId);
+  const billingCycle = subscription?.billing_cycle ?? "monthly";
   const canCustomizeTheme = currentPlanId !== "basic";
   const visibleTheme = canCustomizeTheme ? theme : "mireva";
   const selected = themes.find((item) => item.id === visibleTheme) ?? themes[0];
@@ -202,6 +210,41 @@ export function SettingsView({ business, usage }: { business: AppBusiness; usage
     }
   }
 
+  async function handleCheckout(planId: PlanId) {
+    setCheckoutPlanId(planId);
+    setPlanMessage(null);
+
+    try {
+      const response = await fetch("/api/payments/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ planId, billingCycle }),
+      });
+      const payload = (await response.json().catch(() => null)) as {
+        checkoutUrl?: string;
+        subscription?: BusinessSubscriptionRecord;
+        error?: string;
+      } | null;
+
+      if (!response.ok || !payload?.checkoutUrl || !payload.subscription) {
+        throw new Error(payload?.error ?? "Não foi possível criar o checkout do Asaas.");
+      }
+
+      setSubscription(payload.subscription);
+      setCurrentPlanId(payload.subscription.plan_id);
+      if (payload.subscription.plan_id === "basic") {
+        setTheme("mireva");
+      }
+      window.location.assign(payload.checkoutUrl);
+    } catch (error) {
+      setPlanMessage({
+        type: "error",
+        text: error instanceof Error ? error.message : "Não foi possível criar o checkout do Asaas.",
+      });
+      setCheckoutPlanId(null);
+    }
+  }
+
   return (
     <AdminShell
       title="Configurações"
@@ -288,12 +331,17 @@ export function SettingsView({ business, usage }: { business: AppBusiness; usage
                   <div>
                     <p className="text-sm text-muted-foreground">Plano atual</p>
                     <h3 className="mt-1 text-xl font-semibold text-slate-950">{currentPlan.name}</h3>
-                    <p className="mt-1 text-sm text-muted-foreground">{currentPlan.priceLabel}</p>
+                    <p className="mt-1 text-sm text-muted-foreground">{getPlanPriceLabel(currentPlan, billingCycle)}</p>
                   </div>
                   <span className="w-fit rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
                     {statusLabel}
                   </span>
                 </div>
+                {subscription?.provider_checkout_id && !subscription.provider_subscription_id && (
+                  <p className="mt-3 rounded-lg bg-secondary p-3 text-sm text-muted-foreground">
+                    Checkout Asaas criado. Continue pelo botão abaixo se ainda não concluiu o pagamento.
+                  </p>
+                )}
               </div>
 
               <div className="grid gap-3 sm:grid-cols-2">
@@ -311,9 +359,18 @@ export function SettingsView({ business, usage }: { business: AppBusiness; usage
                 </div>
               </div>
 
-              <Button type="button" variant="outline" onClick={() => setIsPlanChooserOpen((current) => !current)}>
-                {isPlanChooserOpen ? "Ocultar planos" : "Alterar plano"}
-              </Button>
+              <div className="flex flex-wrap gap-2">
+                <Button type="button" variant="outline" onClick={() => setIsPlanChooserOpen((current) => !current)}>
+                  {isPlanChooserOpen ? "Ocultar planos" : "Alterar plano"}
+                </Button>
+                <Button type="button" disabled={checkoutPlanId !== null} onClick={() => void handleCheckout(currentPlanId)}>
+                  {checkoutPlanId === currentPlanId
+                    ? "Abrindo Asaas..."
+                    : subscription?.provider_checkout_id
+                      ? "Continuar no Asaas"
+                      : "Assinar com Asaas"}
+                </Button>
+              </div>
 
               {isPlanChooserOpen && (
                 <div className="space-y-3">
@@ -341,7 +398,9 @@ export function SettingsView({ business, usage }: { business: AppBusiness; usage
                               )}
                             </div>
                             <p className="mt-1 text-sm text-muted-foreground">{plan.description}</p>
-                            <p className="mt-2 text-lg font-semibold text-slate-950">{plan.priceLabel}</p>
+                            <p className="mt-2 text-lg font-semibold text-slate-950">
+                              {getPlanPriceLabel(plan, billingCycle)}
+                            </p>
                           </div>
                           <Button
                             type="button"

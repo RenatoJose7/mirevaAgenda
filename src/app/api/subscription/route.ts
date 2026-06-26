@@ -56,21 +56,30 @@ export async function PATCH(request: Request) {
 
   const { data: currentSubscription } = await admin
     .from("business_subscriptions")
-    .select("status,billing_cycle")
+    .select("status,billing_cycle,provider_subscription_id")
     .eq("business_id", business.id)
     .maybeSingle();
 
+  const nextSubscription: Record<string, unknown> = {
+    business_id: business.id,
+    plan_id: parsed.data.planId,
+    billing_cycle: parsed.data.billingCycle ?? currentSubscription?.billing_cycle ?? "monthly",
+    status: currentSubscription?.status ?? "trialing",
+  };
+
+  if (!currentSubscription?.provider_subscription_id) {
+    Object.assign(nextSubscription, {
+      provider: null,
+      provider_checkout_id: null,
+      provider_payment_method: null,
+      provider_status: null,
+      metadata: {},
+    });
+  }
+
   const { data: subscription, error } = await admin
     .from("business_subscriptions")
-    .upsert(
-      {
-        business_id: business.id,
-        plan_id: parsed.data.planId,
-        billing_cycle: parsed.data.billingCycle ?? currentSubscription?.billing_cycle ?? "monthly",
-        status: currentSubscription?.status ?? "trialing",
-      },
-      { onConflict: "business_id" },
-    )
+    .upsert(nextSubscription, { onConflict: "business_id" })
     .select(
       "id,business_id,plan_id,billing_cycle,status,max_professionals,max_services,current_period_started_at,current_period_ends_at,trial_ends_at,provider,provider_customer_id,provider_subscription_id,provider_plan_id,provider_checkout_id,provider_payment_method,provider_status,started_at,renews_at,cancel_requested_at,cancel_at_period_end,metadata,canceled_at,created_at,updated_at",
     )
