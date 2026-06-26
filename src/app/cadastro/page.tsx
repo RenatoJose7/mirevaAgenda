@@ -24,7 +24,7 @@ const schema = z
     email: z.string().email("Informe um e-mail válido."),
     password: z.string().min(6, "Use pelo menos 6 caracteres."),
     confirmPassword: z.string(),
-    terms: z.boolean().refine((value) => value, "Aceite os termos demonstrativos."),
+    terms: z.boolean().refine((value) => value, "Aceite os termos e condições de uso."),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "As senhas precisam ser iguais.",
@@ -297,9 +297,13 @@ export default function CadastroPage() {
                     checked={termsChecked}
                     onCheckedChange={(checked) => form.setValue("terms", checked === true)}
                   />
-                  <Label htmlFor="terms" className="text-sm leading-5">
-                    Aceito os termos de uso do Mireva Agenda.
-                  </Label>
+                  <div className="text-sm leading-5">
+                    <Label htmlFor="terms">Aceito os </Label>
+                    <Link href="/termos" target="_blank" className="font-medium text-primary underline-offset-4 hover:underline">
+                      termos e condições de uso
+                    </Link>
+                    <span> do Mireva Agenda.</span>
+                  </div>
                 </div>
                 {form.formState.errors.terms && (
                   <p className="text-sm text-destructive sm:col-span-2">{form.formState.errors.terms.message}</p>

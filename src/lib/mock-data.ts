@@ -91,7 +91,7 @@ export const professionalServices: ProfessionalService[] = [
 export const appointments: Appointment[] = [
   {
     id: "A-1042",
-    clientName: "Cliente Demo 01",
+    clientName: "Cliente 01",
     clientWhatsapp: "(11) 90000-1001",
     serviceId: "consulta-inicial",
     professionalId: "camila",
@@ -101,7 +101,7 @@ export const appointments: Appointment[] = [
   },
   {
     id: "A-1043",
-    clientName: "Cliente Demo 02",
+    clientName: "Cliente 02",
     clientWhatsapp: "(11) 90000-1002",
     serviceId: "sessao-especializada",
     professionalId: "bruna",
@@ -111,7 +111,7 @@ export const appointments: Appointment[] = [
   },
   {
     id: "A-1044",
-    clientName: "Cliente Demo 03",
+    clientName: "Cliente 03",
     clientWhatsapp: "(11) 90000-1003",
     serviceId: "retorno",
     professionalId: "rafael",
@@ -121,7 +121,7 @@ export const appointments: Appointment[] = [
   },
   {
     id: "A-1045",
-    clientName: "Cliente Demo 04",
+    clientName: "Cliente 04",
     clientWhatsapp: "(11) 90000-1004",
     serviceId: "atendimento-individual",
     professionalId: "camila",
@@ -143,7 +143,7 @@ export const notifications: Notification[] = [
   {
     id: "N-02",
     title: "Solicitação pendente",
-    description: "Sessão especializada aguardando confirmação manual demonstrativa.",
+    description: "Sessão especializada aguardando confirmação manual.",
     time: "ha 24 min",
     type: "pendente",
     read: false,
@@ -151,7 +151,7 @@ export const notifications: Notification[] = [
   {
     id: "N-03",
     title: "Cancelamento registrado",
-    description: "Cliente Demo 03 cancelou o horário das 10:20.",
+    description: "Cliente 03 cancelou o horário das 10:20.",
     time: "ontem",
     type: "cancelamento",
     read: true,

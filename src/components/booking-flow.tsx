@@ -213,7 +213,7 @@ export function BookingFlow() {
                 <Textarea {...form.register("note")} placeholder="Algo que o profissional deva saber?" />
               </div>
               <Button type="submit" className="sm:col-span-2">
-                Visualizar confirmação demonstrativa
+                Continuar para confirmação
               </Button>
             </form>
           </CardContent>
@@ -245,7 +245,7 @@ export function BookingFlow() {
               )}
             </div>
             <div className="rounded-lg border p-4">
-              <p className="text-sm font-medium text-slate-950">Reservas recentes demonstrativas</p>
+              <p className="text-sm font-medium text-slate-950">Reservas recentes</p>
               <div className="mt-3 space-y-2">
                 {appointments.slice(0, 2).map((appointment) => (
                   <div key={appointment.id} className="flex items-center justify-between gap-2 text-xs">
@@ -256,7 +256,7 @@ export function BookingFlow() {
               </div>
             </div>
             <p className="text-xs leading-5 text-muted-foreground">
-              Esta tela demonstra a experiência do cliente. Nenhuma reserva real será armazenada.
+              Revise os dados antes de confirmar o agendamento.
             </p>
           </CardContent>
         </Card>

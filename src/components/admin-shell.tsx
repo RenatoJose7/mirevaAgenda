@@ -9,13 +9,11 @@ import {
   Menu,
   Scissors,
   Settings,
-  Sparkles,
   LogOut,
   Users,
 } from "lucide-react";
 import { AppVersion } from "@/components/app-version";
 import { BrandMark } from "@/components/brand-mark";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -84,16 +82,7 @@ export function AdminShell({
         <BrandMark />
         <Separator className="my-6" />
         <NavList />
-        <div className="absolute bottom-6 left-5 right-5 space-y-3">
-          <div className="rounded-lg border bg-secondary p-4">
-            <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-              <Sparkles className="size-4 text-primary" />
-              Ambiente de testes
-            </div>
-            <p className="mt-2 text-xs leading-5 text-muted-foreground">
-              Dados reais do estabelecimento no projeto configurado.
-            </p>
-          </div>
+        <div className="absolute bottom-6 left-5 right-5">
           <AppVersion />
         </div>
       </aside>
@@ -132,7 +121,6 @@ export function AdminShell({
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Badge variant="secondary">Teste</Badge>
               <Link href="/notificacoes" prefetch={false}>
                 <Button variant="outline" size="icon" aria-label="Ver notificações" className="relative">
                   <Bell className="size-4" />

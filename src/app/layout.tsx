@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Mireva Agenda",
-  description: "Interface demonstrativa do SaaS de agendamentos da Mireva.",
+  description: "SaaS de agendamentos da Mireva para negócios e profissionais.",
 };
 
 export default function RootLayout({

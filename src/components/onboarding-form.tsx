@@ -198,7 +198,7 @@ export function OnboardingForm() {
                       <Textarea
                         id="business-note"
                         {...form.register("note")}
-                        placeholder="Campo visual, sem persistência nesta etapa."
+                        placeholder="Informações úteis para sua equipe."
                       />
                     </div>
                   </div>
@@ -208,8 +208,8 @@ export function OnboardingForm() {
                       <Label>Confirmação de reservas</Label>
                       <div className="mt-3 grid gap-3">
                         {[
-                          ["automatic", "Automática", "Padrão do MVP"],
-                          ["manual", "Manual", "Opção visual futura"],
+                          ["automatic", "Automática", "Padrão recomendado"],
+                          ["manual", "Manual", "Você aprova cada solicitação"],
                         ].map(([id, title, helper]) => (
                           <button
                             key={id}
@@ -240,12 +240,12 @@ export function OnboardingForm() {
               <div className="space-y-6">
                 <div className="space-y-5">
                   <div className="mx-auto max-w-3xl text-center">
-                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary">Teste grátis</p>
+                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary">Período grátis</p>
                     <h3 className="mt-2 text-2xl font-semibold text-slate-950 md:text-3xl">
                       Experimente o {selectedPlanData.name} gratuitamente por {trialPeriodLabel}
                     </h3>
                     <p className="mt-2 text-sm text-muted-foreground">
-                      Escolha o plano inicial agora. A cobrança real pelo Asaas entra na próxima etapa.
+                      Escolha o plano inicial para ativar o Mireva Agenda.
                     </p>
                   </div>
 
@@ -295,7 +295,7 @@ export function OnboardingForm() {
                             )}
                           </span>
                           <span className="mt-6 block">
-                            <span className="text-sm text-muted-foreground">Depois do teste</span>
+                            <span className="text-sm text-muted-foreground">Após o período grátis</span>
                             <span className="mt-1 block text-3xl font-semibold leading-tight text-slate-950">
                               {getPlanPriceLabel(plan, billingCycle)}
                             </span>

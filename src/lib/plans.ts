@@ -60,7 +60,7 @@ export const subscriptionPlans: SubscriptionPlan[] = [
 ];
 
 export const subscriptionStatusLabels: Record<SubscriptionStatus, string> = {
-  trialing: "Teste",
+  trialing: "Período grátis",
   pending: "Pagamento pendente",
   active: "Ativo",
   canceled: "Cancelado",

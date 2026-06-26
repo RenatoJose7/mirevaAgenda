@@ -190,7 +190,7 @@ export function SettingsView({ business, usage }: { business: AppBusiness; usage
       }
       setPlanMessage({
         type: "success",
-        text: "Plano atualizado visualmente. A cobrança real ainda será conectada em uma próxima etapa.",
+        text: "Plano atualizado com sucesso.",
       });
     } catch (error) {
       setPlanMessage({
