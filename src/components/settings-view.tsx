@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CreditCard, Eye, Settings } from "lucide-react";
+import { CreditCard, Eye, Lock, Settings } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -16,7 +16,6 @@ import { Label } from "@/components/ui/label";
 import type { AppBusiness } from "@/lib/auth/server";
 import { slugify, type BusinessSubscriptionRecord, type PlanUsage } from "@/lib/business/types";
 import { getSubscriptionPlan, subscriptionPlans, subscriptionStatusLabels, type PlanId } from "@/lib/plans";
-import { createClient } from "@/lib/supabase/client";
 import { themes } from "@/lib/themes";
 import { cn } from "@/lib/utils";
 
@@ -48,8 +47,10 @@ export function SettingsView({ business, usage }: { business: AppBusiness; usage
   const [changingPlanId, setChangingPlanId] = useState<PlanId | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
-  const selected = themes.find((item) => item.id === theme) ?? themes[0];
   const currentPlan = getSubscriptionPlan(currentPlanId);
+  const canCustomizeTheme = currentPlanId !== "basic";
+  const visibleTheme = canCustomizeTheme ? theme : "mireva";
+  const selected = themes.find((item) => item.id === visibleTheme) ?? themes[0];
   const maxProfessionals = subscription?.max_professionals ?? currentPlan.maxProfessionals;
   const maxServices = subscription?.max_services ?? currentPlan.maxServices;
   const statusLabel = subscriptionStatusLabels[subscription?.status ?? "trialing"];
@@ -69,36 +70,42 @@ export function SettingsView({ business, usage }: { business: AppBusiness; usage
     setMessage(null);
 
     try {
-      const supabase = createClient();
-      const { data, error } = await supabase
-        .from("businesses")
-        .update({
+      const response = await fetch("/api/business/settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
           name: values.name.trim(),
           slug: values.slug.trim(),
           segment: values.segment?.trim() || null,
           whatsapp: values.whatsapp?.trim() || null,
           address: values.address?.trim() || null,
-          theme_key: theme,
-          booking_confirmation_mode: mode,
-        })
-        .eq("id", business.id)
-        .select("name,address,logo_url")
-        .single();
+          themeKey: canCustomizeTheme ? theme : "mireva",
+          bookingConfirmationMode: mode,
+        }),
+      });
+      const payload = (await response.json().catch(() => null)) as {
+        business?: {
+          name: string;
+          address: string | null;
+          logo_url: string | null;
+          slug: string;
+          theme_key: string;
+          booking_confirmation_mode: "automatic" | "manual";
+        };
+        error?: string;
+      } | null;
 
-      if (error) {
-        setMessage({
-          type: "error",
-          text: error.code === "23505"
-            ? "Este nome do link já está em uso. Escolha outro."
-            : "Não foi possível salvar as configurações.",
-        });
+      if (!response.ok || !payload?.business) {
+        setMessage({ type: "error", text: payload?.error ?? "Não foi possível salvar as configurações." });
         return;
       }
 
-      setBusinessName(data.name);
-      setBusinessAddress(data.address ?? "");
-      setLogoUrl(data.logo_url ?? null);
-      setPublicSlug(values.slug.trim());
+      setBusinessName(payload.business.name);
+      setBusinessAddress(payload.business.address ?? "");
+      setLogoUrl(payload.business.logo_url ?? null);
+      setPublicSlug(payload.business.slug);
+      setTheme(payload.business.theme_key);
+      setMode(payload.business.booking_confirmation_mode);
       setMessage({ type: "success", text: "Configurações salvas com sucesso." });
     } catch {
       setMessage({ type: "error", text: "Supabase não configurado ou sessão expirada." });
@@ -178,6 +185,9 @@ export function SettingsView({ business, usage }: { business: AppBusiness; usage
 
       setSubscription(payload.subscription);
       setCurrentPlanId(payload.subscription.plan_id);
+      if (payload.subscription.plan_id === "basic") {
+        setTheme("mireva");
+      }
       setPlanMessage({
         type: "success",
         text: "Plano atualizado visualmente. A cobrança real ainda será conectada em uma próxima etapa.",
@@ -198,7 +208,7 @@ export function SettingsView({ business, usage }: { business: AppBusiness; usage
       description="Dados reais do estabelecimento e preferências visuais."
       businessName={businessName}
       businessLogoUrl={logoUrl}
-      themeKey={theme}
+      themeKey={visibleTheme}
     >
       <div className="grid gap-6 lg:grid-cols-[1fr_0.9fr]">
         <Card>
@@ -363,28 +373,57 @@ export function SettingsView({ business, usage }: { business: AppBusiness; usage
           <Card>
             <CardContent className="p-5">
               <SectionHeading title="Temas prontos" />
-              <div className="mt-4 space-y-3">
-                {themes.map((option) => (
-                  <button
-                    key={option.id}
-                    type="button"
-                    onClick={() => setTheme(option.id)}
-                    className={cn(
-                      "flex w-full items-center justify-between rounded-lg border bg-white p-3 text-left",
-                      theme === option.id && "border-primary ring-2 ring-primary/15",
-                    )}
-                  >
-                    <span>
-                      <span className="font-medium text-slate-950">{option.name}</span>
-                      <span className="block text-sm text-muted-foreground">{option.description}</span>
-                    </span>
-                    <span className="flex gap-1">
-                      {option.colors.map((color) => (
-                        <span key={color} className="size-5 rounded-full border" style={{ backgroundColor: color }} />
-                      ))}
-                    </span>
-                  </button>
-                ))}
+              <div className="relative mt-4">
+                <div className={cn("space-y-3", !canCustomizeTheme && "pointer-events-none select-none blur-[2px]")}>
+                  {themes.map((option) => (
+                    <button
+                      key={option.id}
+                      type="button"
+                      disabled={!canCustomizeTheme}
+                      onClick={() => {
+                        if (canCustomizeTheme) {
+                          setTheme(option.id);
+                        }
+                      }}
+                      className={cn(
+                        "flex w-full items-center justify-between rounded-lg border bg-white p-3 text-left",
+                        visibleTheme === option.id && "border-primary ring-2 ring-primary/15",
+                      )}
+                    >
+                      <span>
+                        <span className="font-medium text-slate-950">{option.name}</span>
+                        <span className="block text-sm text-muted-foreground">{option.description}</span>
+                      </span>
+                      <span className="flex gap-1">
+                        {option.colors.map((color) => (
+                          <span key={color} className="size-5 rounded-full border" style={{ backgroundColor: color }} />
+                        ))}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+                {!canCustomizeTheme && (
+                  <div className="absolute inset-0 grid place-items-center rounded-lg bg-white/65 p-5 text-center backdrop-blur-[1px]">
+                    <div className="max-w-xs">
+                      <span className="mx-auto grid size-12 place-items-center rounded-full bg-primary text-primary-foreground shadow-sm">
+                        <Lock className="size-5" />
+                      </span>
+                      <p className="mt-3 text-sm font-semibold text-slate-950">
+                        Assine o plano Plus para desbloquear a personalização
+                      </p>
+                      <Button
+                        className="mt-4"
+                        type="button"
+                        onClick={() => {
+                          setIsPlanChooserOpen(true);
+                          setPlanMessage(null);
+                        }}
+                      >
+                        Alterar plano
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
