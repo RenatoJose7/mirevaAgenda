@@ -70,6 +70,14 @@ export default function CadastroPage() {
         return;
       }
 
+      if (isExistingSignupResponse(data.user)) {
+        setMessage({
+          type: "error",
+          text: "Este e-mail já tem uma conta no Mireva Agenda. Entre com sua senha ou use o login com Google.",
+        });
+        return;
+      }
+
       if (data.session) {
         window.location.assign("/onboarding");
         return;
@@ -336,4 +344,8 @@ export default function CadastroPage() {
       </Card>
     </main>
   );
+}
+
+function isExistingSignupResponse(user: { identities?: unknown[] | null } | null) {
+  return Boolean(user && Array.isArray(user.identities) && user.identities.length === 0);
 }

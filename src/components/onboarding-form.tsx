@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft, ArrowRight, CheckCircle2 } from "lucide-react";
 import { useForm } from "react-hook-form";
@@ -34,7 +33,6 @@ const schema = z.object({
 type FormData = z.infer<typeof schema>;
 
 export function OnboardingForm() {
-  const router = useRouter();
   const [step, setStep] = useState<"business" | "plan">("business");
   const [mode, setMode] = useState<"automatic" | "manual">("automatic");
   const [message, setMessage] = useState<string | null>(null);
@@ -103,9 +101,19 @@ export function OnboardingForm() {
         });
       }
 
-      router.push("/dashboard");
+      try {
+        const checkoutUrl = await createInitialCheckout(selectedPlan, billingCycle);
+        window.location.assign(checkoutUrl);
+      } catch (error) {
+        console.error("initial checkout failed", error);
+        setMessage(
+          error instanceof Error
+            ? `Estabelecimento criado, mas não foi possível abrir o checkout: ${error.message}`
+            : "Estabelecimento criado, mas não foi possível abrir o checkout. Acesse Configurações > Assinatura para tentar novamente.",
+        );
+      }
     } catch {
-      setMessage("Supabase não configurado. Preencha o .env.local para criar o estabelecimento real.");
+      setMessage("Não foi possível criar o estabelecimento agora. Confira o Supabase e tente novamente.");
     } finally {
       setIsSubmitting(false);
     }
@@ -356,6 +364,23 @@ async function uploadInitialLogo(file: File) {
     const payload = (await response.json().catch(() => null)) as { error?: string } | null;
     throw new Error(payload?.error ?? "Não foi possível enviar a foto.");
   }
+}
+
+async function createInitialCheckout(planId: PlanId, billingCycle: BillingCycle) {
+  const response = await fetch("/api/payments/checkout", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ planId, billingCycle }),
+  });
+  const payload = (await response.json().catch(() => null)) as { checkoutUrl?: string; error?: string } | null;
+
+  if (!response.ok || !payload?.checkoutUrl) {
+    throw new Error(payload?.error ?? "Não foi possível criar o checkout do Asaas.");
+  }
+
+  return payload.checkoutUrl;
 }
 
 function getOnboardingErrorMessage(message: string) {
