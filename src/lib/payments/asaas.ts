@@ -63,7 +63,7 @@ export async function createAsaasCheckout(payload: AsaasCheckoutPayload) {
 
 async function asaasRequest<T>(path: string, init: RequestInit = {}) {
   const config = getPaymentPreparationConfig();
-  const apiKey = process.env.ASAAS_API_KEY;
+  const apiKey = normalizeAsaasApiKey(process.env.ASAAS_API_KEY);
 
   if (!apiKey) {
     throw new AsaasApiError("Configure ASAAS_API_KEY no .env.local para criar o checkout.", 500, "missing_api_key");
@@ -91,4 +91,14 @@ async function asaasRequest<T>(path: string, init: RequestInit = {}) {
   }
 
   return payload as T;
+}
+
+function normalizeAsaasApiKey(value: string | undefined) {
+  const trimmed = value?.trim();
+
+  if (!trimmed) {
+    return "";
+  }
+
+  return trimmed.startsWith("\\$") ? trimmed.slice(1) : trimmed;
 }
