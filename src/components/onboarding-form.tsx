@@ -25,6 +25,13 @@ import { cn } from "@/lib/utils";
 const schema = z.object({
   name: z.string().min(2, "Informe o nome do estabelecimento."),
   segment: z.string().optional(),
+  cpfCnpj: z
+    .string()
+    .min(1, "Informe CPF ou CNPJ para a cobrança.")
+    .refine((value) => {
+      const digits = value.replace(/\D/g, "");
+      return digits.length === 11 || digits.length === 14;
+    }, "Informe um CPF ou CNPJ válido."),
   whatsapp: z.string().optional(),
   address: z.string().optional(),
   note: z.string().optional(),
@@ -47,6 +54,7 @@ export function OnboardingForm() {
     defaultValues: {
       name: "",
       segment: "",
+      cpfCnpj: "",
       whatsapp: "",
       address: "",
       note: "",
@@ -102,15 +110,19 @@ export function OnboardingForm() {
       }
 
       try {
-        const checkoutUrl = await createInitialCheckout(selectedPlan, billingCycle);
+        const checkoutUrl = await createInitialCheckout(selectedPlan, billingCycle, values.cpfCnpj);
         window.location.assign(checkoutUrl);
       } catch (error) {
         console.error("initial checkout failed", error);
+        await rollbackOnboarding().catch((rollbackError) => {
+          console.error("onboarding rollback failed", rollbackError);
+        });
         setMessage(
           error instanceof Error
-            ? `Estabelecimento criado, mas não foi possível abrir o checkout: ${error.message}`
-            : "Estabelecimento criado, mas não foi possível abrir o checkout. Acesse Configurações > Assinatura para tentar novamente.",
+            ? `Não foi possível abrir o checkout: ${error.message}. O estabelecimento não foi ativado; revise os dados e tente novamente.`
+            : "Não foi possível abrir o checkout. O estabelecimento não foi ativado; revise os dados e tente novamente.",
         );
+        setStep("business");
       }
     } catch {
       setMessage("Não foi possível criar o estabelecimento agora. Confira o Supabase e tente novamente.");
@@ -177,6 +189,18 @@ export function OnboardingForm() {
                           {...form.register("segment")}
                           placeholder="Ex: consultoria, educação, saúde"
                         />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="business-cpf-cnpj">CPF/CNPJ para cobrança</Label>
+                        <Input
+                          id="business-cpf-cnpj"
+                          {...form.register("cpfCnpj")}
+                          inputMode="numeric"
+                          placeholder="000.000.000-00 ou 00.000.000/0000-00"
+                        />
+                        {form.formState.errors.cpfCnpj && (
+                          <p className="text-sm text-destructive">{form.formState.errors.cpfCnpj.message}</p>
+                        )}
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="business-whatsapp">WhatsApp</Label>
@@ -366,13 +390,13 @@ async function uploadInitialLogo(file: File) {
   }
 }
 
-async function createInitialCheckout(planId: PlanId, billingCycle: BillingCycle) {
+async function createInitialCheckout(planId: PlanId, billingCycle: BillingCycle, cpfCnpj: string) {
   const response = await fetch("/api/payments/checkout", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ planId, billingCycle }),
+    body: JSON.stringify({ planId, billingCycle, cpfCnpj }),
   });
   const payload = (await response.json().catch(() => null)) as { checkoutUrl?: string; error?: string } | null;
 
@@ -381,6 +405,12 @@ async function createInitialCheckout(planId: PlanId, billingCycle: BillingCycle)
   }
 
   return payload.checkoutUrl;
+}
+
+async function rollbackOnboarding() {
+  await fetch("/api/onboarding", {
+    method: "DELETE",
+  });
 }
 
 function getOnboardingErrorMessage(message: string) {

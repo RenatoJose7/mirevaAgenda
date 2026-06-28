@@ -8,6 +8,7 @@ export const dynamic = "force-dynamic";
 
 const allowedThemes = ["mireva", "essencial", "premium", "calmo", "editorial"] as const;
 const allowedModes = ["automatic", "manual"] as const;
+const businessLogosBucket = "business-logos";
 
 const schema = z.object({
   name: z.string().trim().min(2).max(120),
@@ -114,6 +115,61 @@ export async function POST(request: Request) {
   }
 
   return NextResponse.json({ business, subscription });
+}
+
+export async function DELETE() {
+  const user = await getCurrentUser();
+
+  if (!user) {
+    return NextResponse.json({ error: "Sessão expirada. Entre novamente para continuar." }, { status: 401 });
+  }
+
+  const admin = createAdminClient();
+  const { data: membership, error: membershipError } = await admin
+    .from("business_members")
+    .select("business_id,role")
+    .eq("user_id", user.id)
+    .limit(1)
+    .maybeSingle();
+
+  if (membershipError) {
+    return NextResponse.json({ error: "Não foi possível validar o estabelecimento." }, { status: 500 });
+  }
+
+  if (!membership?.business_id) {
+    return NextResponse.json({ ok: true });
+  }
+
+  if (membership.role !== "owner") {
+    return NextResponse.json({ error: "Apenas o proprietário pode desfazer esta configuração." }, { status: 403 });
+  }
+
+  const { data: subscription } = await admin
+    .from("business_subscriptions")
+    .select("provider_checkout_id,provider_subscription_id")
+    .eq("business_id", membership.business_id)
+    .maybeSingle();
+
+  if (subscription?.provider_checkout_id || subscription?.provider_subscription_id) {
+    return NextResponse.json({ error: "Este estabelecimento já possui um checkout ou assinatura externa." }, { status: 409 });
+  }
+
+  const { data: business } = await admin.from("businesses").select("logo_path").eq("id", membership.business_id).maybeSingle();
+
+  await admin.from("payment_webhook_events").delete().eq("business_id", membership.business_id);
+  await admin.from("business_subscriptions").delete().eq("business_id", membership.business_id);
+
+  const { error: businessError } = await admin.from("businesses").delete().eq("id", membership.business_id);
+
+  if (businessError) {
+    return NextResponse.json({ error: "Não foi possível desfazer a configuração do estabelecimento." }, { status: 500 });
+  }
+
+  if (business?.logo_path) {
+    await admin.storage.from(businessLogosBucket).remove([business.logo_path]);
+  }
+
+  return NextResponse.json({ ok: true });
 }
 
 async function getAvailableSlug(admin: ReturnType<typeof createAdminClient>, name: string) {

@@ -64,6 +64,7 @@ export function SettingsView({ business, usage }: { business: AppBusiness; usage
   const [isPlanChooserOpen, setIsPlanChooserOpen] = useState(false);
   const [changingPlanId, setChangingPlanId] = useState<PlanId | null>(null);
   const [checkoutPlanId, setCheckoutPlanId] = useState<PlanId | null>(null);
+  const [checkoutCpfCnpj, setCheckoutCpfCnpj] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -233,7 +234,7 @@ export function SettingsView({ business, usage }: { business: AppBusiness; usage
       const response = await fetch("/api/payments/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ planId, billingCycle }),
+        body: JSON.stringify({ planId, billingCycle, cpfCnpj: checkoutCpfCnpj }),
       });
       const payload = (await response.json().catch(() => null)) as {
         checkoutUrl?: string;
@@ -398,6 +399,18 @@ export function SettingsView({ business, usage }: { business: AppBusiness; usage
                     {usage.servicesCount}/{maxServices}
                   </strong>
                 </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="subscription-cpf-cnpj">CPF/CNPJ para cobrança</Label>
+                <Input
+                  id="subscription-cpf-cnpj"
+                  value={checkoutCpfCnpj}
+                  inputMode="numeric"
+                  placeholder="000.000.000-00 ou 00.000.000/0000-00"
+                  onChange={(event) => setCheckoutCpfCnpj(event.target.value)}
+                />
+                <p className="text-xs text-muted-foreground">Necessário para abrir o checkout no Asaas.</p>
               </div>
 
               <div className="flex flex-wrap gap-2">

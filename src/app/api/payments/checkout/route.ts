@@ -11,6 +11,7 @@ export const dynamic = "force-dynamic";
 const schema = z.object({
   planId: z.enum(planIds),
   billingCycle: z.enum(["monthly", "annual"]).optional(),
+  cpfCnpj: z.string().trim().optional(),
 });
 
 const CHECKOUT_IMAGE_BASE64 =
@@ -37,6 +38,12 @@ export async function POST(request: Request) {
 
   if (!parsed.success) {
     return NextResponse.json({ error: "Escolha um plano válido para continuar." }, { status: 400 });
+  }
+
+  const cpfCnpj = onlyDigits(parsed.data.cpfCnpj);
+
+  if (!isValidCpfCnpj(cpfCnpj)) {
+    return NextResponse.json({ error: "Informe um CPF ou CNPJ válido para abrir o checkout do Asaas." }, { status: 400 });
   }
 
   const admin = createAdminClient();
@@ -121,6 +128,7 @@ export async function POST(request: Request) {
         name: business.name,
         email: user.email ?? undefined,
         phone: onlyDigits(business.whatsapp),
+        cpfCnpj,
       },
       subscription: {
         cycle: billingCycle === "annual" ? "YEARLY" : "MONTHLY",
@@ -233,6 +241,10 @@ function centsToReais(cents: number) {
 function onlyDigits(value: string | null | undefined) {
   const digits = value?.replace(/\D/g, "");
   return digits || undefined;
+}
+
+function isValidCpfCnpj(value: string | undefined) {
+  return value?.length === 11 || value?.length === 14;
 }
 
 function buildFallbackCheckoutUrl(id: string) {

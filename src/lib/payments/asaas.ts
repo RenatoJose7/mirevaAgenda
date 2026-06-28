@@ -31,6 +31,7 @@ export type AsaasCheckoutPayload = {
     name?: string;
     email?: string;
     phone?: string;
+    cpfCnpj?: string;
   };
   subscription: {
     cycle: "MONTHLY" | "YEARLY";
