@@ -104,6 +104,9 @@ export async function POST(request: Request) {
 
   try {
     const origin = new URL(request.url).origin;
+    const checkoutItemName = sanitizeAsaasText(`Mireva Agenda ${plan.name}`, "Mireva Agenda Plano", 30);
+    const checkoutItemDescription = sanitizeAsaasText(`Plano ${plan.name} do Mireva Agenda`, "Plano Mireva Agenda", 80);
+    const customerName = getAsaasCustomerName(business.name);
     const checkout = await createAsaasCheckout({
       billingTypes: ["CREDIT_CARD"],
       chargeTypes: ["RECURRENT"],
@@ -116,8 +119,8 @@ export async function POST(request: Request) {
       },
       items: [
         {
-          name: `Mireva ${plan.name}`.slice(0, 30),
-          description: `Plano ${plan.name} do Mireva Agenda`,
+          name: checkoutItemName,
+          description: checkoutItemDescription,
           quantity: 1,
           value: centsToReais(priceCents),
           imageBase64: CHECKOUT_IMAGE_BASE64,
@@ -125,7 +128,7 @@ export async function POST(request: Request) {
         },
       ],
       customerData: {
-        name: business.name,
+        name: customerName,
         email: user.email ?? undefined,
         phone: onlyDigits(business.whatsapp),
         cpfCnpj,
@@ -245,6 +248,23 @@ function onlyDigits(value: string | null | undefined) {
 
 function isValidCpfCnpj(value: string | undefined) {
   return value?.length === 11 || value?.length === 14;
+}
+
+function getAsaasCustomerName(value: string | null | undefined) {
+  const name = sanitizeAsaasText(value, "Cliente Mireva Agenda", 80);
+  return name.includes(" ") ? name : `${name} Mireva`;
+}
+
+function sanitizeAsaasText(value: string | null | undefined, fallback: string, maxLength: number) {
+  const sanitized = value
+    ?.normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z0-9\s.,:;()/-]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  const safeValue = sanitized && sanitized.length >= 2 ? sanitized : fallback;
+  return safeValue.slice(0, maxLength).trim() || fallback.slice(0, maxLength);
 }
 
 function buildFallbackCheckoutUrl(id: string) {
