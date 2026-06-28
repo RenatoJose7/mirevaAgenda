@@ -1,7 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
-import { CreditCard, Eye, Lock, Settings, Trash2 } from "lucide-react";
+import { Eye, Lock, Settings, Trash2 } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -25,14 +26,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { AppBusiness } from "@/lib/auth/server";
-import { slugify, type BusinessSubscriptionRecord, type PlanUsage } from "@/lib/business/types";
-import {
-  getPlanPriceLabel,
-  getSubscriptionPlan,
-  subscriptionPlans,
-  subscriptionStatusLabels,
-  type PlanId,
-} from "@/lib/plans";
+import { slugify } from "@/lib/business/types";
+import type { PlanId } from "@/lib/plans";
 import { themes } from "@/lib/themes";
 import { cn } from "@/lib/utils";
 
@@ -49,7 +44,7 @@ const schema = z.object({
 
 type SettingsForm = z.infer<typeof schema>;
 
-export function SettingsView({ business, usage }: { business: AppBusiness; usage: PlanUsage }) {
+export function SettingsView({ business, currentPlanId }: { business: AppBusiness; currentPlanId: PlanId }) {
   const [theme, setTheme] = useState(business.theme_key || "mireva");
   const [mode, setMode] = useState(business.booking_confirmation_mode);
   const [businessName, setBusinessName] = useState(business.name);
@@ -57,27 +52,15 @@ export function SettingsView({ business, usage }: { business: AppBusiness; usage
   const [logoUrl, setLogoUrl] = useState(business.logo_url ?? null);
   const [publicSlug, setPublicSlug] = useState(business.slug);
   const [message, setMessage] = useState<{ type: "error" | "success"; text: string } | null>(null);
-  const [planMessage, setPlanMessage] = useState<{ type: "error" | "success"; text: string } | null>(null);
   const [accountMessage, setAccountMessage] = useState<{ type: "error" | "success"; text: string } | null>(null);
-  const [subscription, setSubscription] = useState<BusinessSubscriptionRecord | null>(usage.subscription);
-  const [currentPlanId, setCurrentPlanId] = useState<PlanId>(getSubscriptionPlan(usage.subscription?.plan_id).id);
-  const [isPlanChooserOpen, setIsPlanChooserOpen] = useState(false);
-  const [changingPlanId, setChangingPlanId] = useState<PlanId | null>(null);
-  const [checkoutPlanId, setCheckoutPlanId] = useState<PlanId | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState("");
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
-  const currentPlan = getSubscriptionPlan(currentPlanId);
-  const billingCycle = subscription?.billing_cycle ?? "monthly";
   const canCustomizeTheme = currentPlanId !== "basic";
   const visibleTheme = canCustomizeTheme ? theme : "mireva";
   const selected = themes.find((item) => item.id === visibleTheme) ?? themes[0];
-  const maxProfessionals = subscription?.max_professionals ?? currentPlan.maxProfessionals;
-  const maxServices = subscription?.max_services ?? currentPlan.maxServices;
-  const statusLabel = subscriptionStatusLabels[subscription?.status ?? "trialing"];
-  const checkoutUrl = getStoredCheckoutUrl(subscription);
   const form = useForm<SettingsForm>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -184,88 +167,6 @@ export function SettingsView({ business, usage }: { business: AppBusiness; usage
     }
   }
 
-  async function handlePlanChange(planId: PlanId) {
-    if (planId === currentPlanId) {
-      return;
-    }
-
-    setChangingPlanId(planId);
-    setPlanMessage(null);
-
-    try {
-      const response = await fetch("/api/subscription", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ planId }),
-      });
-      const payload = (await response.json().catch(() => null)) as {
-        subscription?: BusinessSubscriptionRecord;
-        error?: string;
-      } | null;
-
-      if (!response.ok || !payload?.subscription) {
-        throw new Error(payload?.error ?? "Não foi possível alterar o plano agora.");
-      }
-
-      setSubscription(payload.subscription);
-      setCurrentPlanId(payload.subscription.plan_id);
-      if (payload.subscription.plan_id === "basic") {
-        setTheme("mireva");
-      }
-      setPlanMessage({
-        type: "success",
-        text: "Plano atualizado com sucesso.",
-      });
-    } catch (error) {
-      setPlanMessage({
-        type: "error",
-        text: error instanceof Error ? error.message : "Não foi possível alterar o plano agora.",
-      });
-    } finally {
-      setChangingPlanId(null);
-    }
-  }
-
-  async function handleCheckout(planId: PlanId) {
-    if (checkoutUrl) {
-      window.location.assign(checkoutUrl);
-      return;
-    }
-
-    setCheckoutPlanId(planId);
-    setPlanMessage(null);
-
-    try {
-      const response = await fetch("/api/payments/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ planId, billingCycle }),
-      });
-      const payload = (await response.json().catch(() => null)) as {
-        checkoutUrl?: string;
-        subscription?: BusinessSubscriptionRecord;
-        error?: string;
-      } | null;
-
-      if (!response.ok || !payload?.checkoutUrl || !payload.subscription) {
-        throw new Error(payload?.error ?? "Não foi possível criar o checkout do Asaas.");
-      }
-
-      setSubscription(payload.subscription);
-      setCurrentPlanId(payload.subscription.plan_id);
-      if (payload.subscription.plan_id === "basic") {
-        setTheme("mireva");
-      }
-      window.location.assign(payload.checkoutUrl);
-    } catch (error) {
-      setPlanMessage({
-        type: "error",
-        text: error instanceof Error ? error.message : "Não foi possível criar o checkout do Asaas.",
-      });
-      setCheckoutPlanId(null);
-    }
-  }
-
   async function handleDeleteAccount() {
     setIsDeletingAccount(true);
     setAccountMessage(null);
@@ -369,114 +270,6 @@ export function SettingsView({ business, usage }: { business: AppBusiness; usage
 
         <div className="space-y-6">
           <Card>
-            <CardContent className="space-y-5 p-5">
-              <SectionHeading title="Assinatura" icon={CreditCard} />
-              {planMessage && <AuthNotice type={planMessage.type} message={planMessage.text} />}
-
-              <div className="rounded-lg border bg-white p-4">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Plano atual</p>
-                    <h3 className="mt-1 text-xl font-semibold text-slate-950">{currentPlan.name}</h3>
-                    <p className="mt-1 text-sm text-muted-foreground">{getPlanPriceLabel(currentPlan, billingCycle)}</p>
-                  </div>
-                  <span className="w-fit rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
-                    {statusLabel}
-                  </span>
-                </div>
-                {subscription?.provider_checkout_id && !subscription.provider_subscription_id && (
-                  <p className="mt-3 rounded-lg bg-secondary p-3 text-sm text-muted-foreground">
-                    Checkout Asaas criado. Continue pelo botão abaixo se ainda não concluiu o pagamento.
-                  </p>
-                )}
-              </div>
-
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div className="rounded-lg bg-secondary p-4">
-                  <p className="text-sm text-muted-foreground">Profissionais</p>
-                  <strong className="mt-1 block text-2xl text-slate-950">
-                    {usage.professionalsCount}/{maxProfessionals}
-                  </strong>
-                </div>
-                <div className="rounded-lg bg-secondary p-4">
-                  <p className="text-sm text-muted-foreground">Serviços</p>
-                  <strong className="mt-1 block text-2xl text-slate-950">
-                    {usage.servicesCount}/{maxServices}
-                  </strong>
-                </div>
-              </div>
-
-              <div className="flex flex-wrap gap-2">
-                <Button type="button" variant="outline" onClick={() => setIsPlanChooserOpen((current) => !current)}>
-                  {isPlanChooserOpen ? "Ocultar planos" : "Alterar plano"}
-                </Button>
-                <Button type="button" disabled={checkoutPlanId !== null} onClick={() => void handleCheckout(currentPlanId)}>
-                  {checkoutPlanId === currentPlanId
-                    ? "Abrindo Asaas..."
-                    : subscription?.provider_checkout_id
-                      ? "Continuar no Asaas"
-                      : "Assinar com Asaas"}
-                </Button>
-              </div>
-
-              {isPlanChooserOpen && (
-                <div className="space-y-3">
-                  {subscriptionPlans.map((plan) => {
-                    const isCurrent = plan.id === currentPlanId;
-                    const isOverProfessionals = usage.professionalsCount > plan.maxProfessionals;
-                    const isOverServices = usage.servicesCount > plan.maxServices;
-
-                    return (
-                      <div
-                        key={plan.id}
-                        className={cn(
-                          "rounded-lg border bg-white p-4",
-                          isCurrent && "border-primary ring-2 ring-primary/15",
-                        )}
-                      >
-                        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                          <div>
-                            <div className="flex flex-wrap items-center gap-2">
-                              <h4 className="font-semibold text-slate-950">{plan.name}</h4>
-                              {plan.highlight && (
-                                <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
-                                  {plan.highlight}
-                                </span>
-                              )}
-                            </div>
-                            <p className="mt-1 text-sm text-muted-foreground">{plan.description}</p>
-                            <p className="mt-2 text-lg font-semibold text-slate-950">
-                              {getPlanPriceLabel(plan, billingCycle)}
-                            </p>
-                          </div>
-                          <Button
-                            type="button"
-                            variant={isCurrent ? "secondary" : "default"}
-                            disabled={isCurrent || changingPlanId !== null}
-                            onClick={() => void handlePlanChange(plan.id)}
-                          >
-                            {isCurrent ? "Plano atual" : changingPlanId === plan.id ? "Alterando..." : "Selecionar plano"}
-                          </Button>
-                        </div>
-                        <div className="mt-3 grid gap-2 text-sm text-muted-foreground sm:grid-cols-2">
-                          <span>Profissionais: {plan.maxProfessionals}</span>
-                          <span>Serviços: {plan.maxServices}</span>
-                        </div>
-                        {(isOverProfessionals || isOverServices) && (
-                          <p className="mt-3 rounded-lg bg-amber-50 p-3 text-sm text-amber-800">
-                            Seu uso atual está acima deste plano. Os itens existentes continuam funcionando, mas novos
-                            cadastros ficam bloqueados até o uso voltar ao limite.
-                          </p>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card>
             <CardContent className="p-5">
               <SectionHeading title="Temas prontos" />
               <div className="relative mt-4">
@@ -517,15 +310,8 @@ export function SettingsView({ business, usage }: { business: AppBusiness; usage
                       <p className="mt-3 text-sm font-semibold text-slate-950">
                         Assine o plano Plus para desbloquear a personalização
                       </p>
-                      <Button
-                        className="mt-4"
-                        type="button"
-                        onClick={() => {
-                          setIsPlanChooserOpen(true);
-                          setPlanMessage(null);
-                        }}
-                      >
-                        Alterar plano
+                      <Button className="mt-4" asChild>
+                        <Link href="/assinatura">Alterar plano</Link>
                       </Button>
                     </div>
                   </div>
@@ -647,28 +433,4 @@ export function SettingsView({ business, usage }: { business: AppBusiness; usage
       </AlertDialog>
     </AdminShell>
   );
-}
-
-function getStoredCheckoutUrl(subscription: BusinessSubscriptionRecord | null) {
-  if (!subscription?.provider_checkout_id || subscription.provider_subscription_id) {
-    return null;
-  }
-
-  const metadata = subscription.metadata;
-
-  if (!isRecord(metadata)) {
-    return null;
-  }
-
-  const checkout = metadata.asaas_checkout;
-
-  if (!isRecord(checkout) || typeof checkout.link !== "string") {
-    return null;
-  }
-
-  return checkout.link.startsWith("https://") ? checkout.link : null;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }

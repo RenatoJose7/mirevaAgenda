@@ -141,9 +141,9 @@ export async function POST(request: Request) {
       externalReference: preparedSubscription.id,
       customer: asaasCustomerId,
       callback: {
-        successUrl: `${origin}/configuracoes?pagamento=sucesso`,
-        cancelUrl: `${origin}/configuracoes?pagamento=cancelado`,
-        expiredUrl: `${origin}/configuracoes?pagamento=expirado`,
+        successUrl: `${origin}/assinatura?pagamento=sucesso`,
+        cancelUrl: `${origin}/assinatura?pagamento=cancelado`,
+        expiredUrl: `${origin}/assinatura?pagamento=expirado`,
       },
       items: [
         {

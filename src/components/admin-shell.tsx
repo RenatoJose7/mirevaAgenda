@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import {
   Bell,
   CalendarDays,
+  CreditCard,
   Home,
   Menu,
   Scissors,
@@ -26,15 +27,19 @@ const navItems = [
   { href: "/profissionais", label: "Profissionais", icon: Users },
   { href: "/servicos", label: "Serviços", icon: Scissors },
   { href: "/notificacoes", label: "Notificações", icon: Bell },
+];
+
+const accountNavItems = [
+  { href: "/assinatura", label: "Assinatura", icon: CreditCard },
   { href: "/configuracoes", label: "Configurações", icon: Settings },
 ];
 
-function NavList() {
+function NavList({ items = navItems }: { items?: typeof navItems }) {
   const pathname = usePathname();
 
   return (
     <nav className="space-y-1">
-      {navItems.map((item) => {
+      {items.map((item) => {
         const active = pathname === item.href;
         const Icon = item.icon;
         return (
@@ -54,6 +59,44 @@ function NavList() {
         );
       })}
     </nav>
+  );
+}
+
+function AccountNav() {
+  const pathname = usePathname();
+
+  return (
+    <div className="space-y-1">
+      {accountNavItems.map((item) => {
+        const active = pathname === item.href;
+        const Icon = item.icon;
+
+        return (
+          <Link
+            key={item.href}
+            href={item.href}
+            prefetch={false}
+            className={cn(
+              "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition",
+              active && "bg-primary text-primary-foreground shadow-sm",
+              !active && "hover:bg-secondary hover:text-foreground",
+            )}
+          >
+            <Icon className="size-4" />
+            {item.label}
+          </Link>
+        );
+      })}
+      <form action="/auth/logout" method="post">
+        <button
+          type="submit"
+          className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-muted-foreground transition hover:bg-secondary hover:text-foreground"
+        >
+          <LogOut className="size-4" />
+          Sair
+        </button>
+      </form>
+    </div>
   );
 }
 
@@ -83,7 +126,9 @@ export function AdminShell({
         <Separator className="my-6" />
         <NavList />
         <div className="absolute bottom-6 left-5 right-5">
-          <AppVersion />
+          <Separator className="mb-4" />
+          <AccountNav />
+          <AppVersion className="mt-4 text-left" />
         </div>
       </aside>
 
@@ -101,6 +146,8 @@ export function AdminShell({
                   <BrandMark />
                   <Separator className="my-6" />
                   <NavList />
+                  <Separator className="my-6" />
+                  <AccountNav />
                   <AppVersion className="mt-8 text-left" />
                 </SheetContent>
               </Sheet>

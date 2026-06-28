@@ -8,5 +8,5 @@ export default async function ConfiguracoesPage() {
   const business = await requireBusiness();
   const usage = await getPlanUsageForBusiness(business.id);
 
-  return <SettingsView business={business} usage={usage} />;
+  return <SettingsView business={business} currentPlanId={usage.subscription?.plan_id ?? "basic"} />;
 }
