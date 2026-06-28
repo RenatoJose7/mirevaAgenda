@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getCurrentBusiness, getCurrentUser } from "@/lib/auth/server";
 import type { BusinessSubscriptionRecord } from "@/lib/business/types";
-import { AsaasApiError, createAsaasCheckout } from "@/lib/payments/asaas";
+import { AsaasApiError, createAsaasCheckout, createAsaasCustomer, findAsaasCustomerByCpfCnpj } from "@/lib/payments/asaas";
 import { getSubscriptionPlan, planIds } from "@/lib/plans";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -42,7 +42,7 @@ export async function POST(request: Request) {
 
   const cpfCnpj = onlyDigits(parsed.data.cpfCnpj);
 
-  if (!isValidCpfCnpj(cpfCnpj)) {
+  if (!cpfCnpj || !isValidCpfCnpj(cpfCnpj)) {
     return NextResponse.json({ error: "Informe um CPF ou CNPJ válido para abrir o checkout do Asaas." }, { status: 400 });
   }
 
@@ -107,11 +107,21 @@ export async function POST(request: Request) {
     const checkoutItemName = sanitizeAsaasText(`Mireva Agenda ${plan.name}`, "Mireva Agenda Plano", 30);
     const checkoutItemDescription = sanitizeAsaasText(`Plano ${plan.name} do Mireva Agenda`, "Plano Mireva Agenda", 80);
     const customerName = getAsaasCustomerName(business.name);
+    const asaasCustomerId =
+      currentSubscription?.provider_customer_id ??
+      (await getOrCreateAsaasCustomerId({
+        name: customerName,
+        cpfCnpj,
+        email: user.email,
+        phone: business.whatsapp,
+        externalReference: business.id,
+      }));
     const checkout = await createAsaasCheckout({
       billingTypes: ["CREDIT_CARD"],
       chargeTypes: ["RECURRENT"],
       minutesToExpire: 1440,
       externalReference: preparedSubscription.id,
+      customer: asaasCustomerId,
       callback: {
         successUrl: `${origin}/configuracoes?pagamento=sucesso`,
         cancelUrl: `${origin}/configuracoes?pagamento=cancelado`,
@@ -127,12 +137,6 @@ export async function POST(request: Request) {
           externalReference: `${preparedSubscription.id}:${plan.id}`,
         },
       ],
-      customerData: {
-        name: customerName,
-        email: user.email ?? undefined,
-        phone: onlyDigits(business.whatsapp),
-        cpfCnpj,
-      },
       subscription: {
         cycle: billingCycle === "annual" ? "YEARLY" : "MONTHLY",
         nextDueDate,
@@ -144,6 +148,7 @@ export async function POST(request: Request) {
       .from("business_subscriptions")
       .update({
         provider: "asaas",
+        provider_customer_id: asaasCustomerId,
         provider_checkout_id: checkout.id,
         provider_payment_method: checkout.billingTypes?.join(",") || "checkout",
         provider_status: checkout.status ?? "ACTIVE",
@@ -248,6 +253,33 @@ function onlyDigits(value: string | null | undefined) {
 
 function isValidCpfCnpj(value: string | undefined) {
   return value?.length === 11 || value?.length === 14;
+}
+
+async function getOrCreateAsaasCustomerId(input: {
+  name: string;
+  cpfCnpj: string;
+  email: string | undefined;
+  phone: string | null | undefined;
+  externalReference: string;
+}) {
+  const existingCustomer = await findAsaasCustomerByCpfCnpj(input.cpfCnpj);
+
+  if (existingCustomer?.id) {
+    return existingCustomer.id;
+  }
+
+  const phone = onlyDigits(input.phone);
+  const customer = await createAsaasCustomer({
+    name: input.name,
+    cpfCnpj: input.cpfCnpj,
+    email: input.email,
+    phone,
+    mobilePhone: phone,
+    externalReference: input.externalReference,
+    notificationDisabled: true,
+  });
+
+  return customer.id;
 }
 
 function getAsaasCustomerName(value: string | null | undefined) {

@@ -9,11 +9,33 @@ export type AsaasCheckoutResponse = {
   externalReference?: string;
 };
 
+export type AsaasCustomerResponse = {
+  id: string;
+  name?: string;
+  cpfCnpj?: string;
+  email?: string;
+};
+
+export type AsaasCustomerPayload = {
+  name: string;
+  cpfCnpj: string;
+  email?: string;
+  phone?: string;
+  mobilePhone?: string;
+  externalReference?: string;
+  notificationDisabled?: boolean;
+};
+
+type AsaasCustomerListResponse = {
+  data?: AsaasCustomerResponse[];
+};
+
 export type AsaasCheckoutPayload = {
   billingTypes: Array<"CREDIT_CARD" | "PIX">;
   chargeTypes: Array<"RECURRENT">;
   minutesToExpire: number;
   externalReference: string;
+  customer?: string;
   callback: {
     successUrl: string;
     cancelUrl: string;
@@ -60,6 +82,19 @@ export async function createAsaasCheckout(payload: AsaasCheckoutPayload) {
     method: "POST",
     body: JSON.stringify(payload),
   });
+}
+
+export async function createAsaasCustomer(payload: AsaasCustomerPayload) {
+  return asaasRequest<AsaasCustomerResponse>("/v3/customers", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function findAsaasCustomerByCpfCnpj(cpfCnpj: string) {
+  const params = new URLSearchParams({ cpfCnpj });
+  const payload = await asaasRequest<AsaasCustomerListResponse>(`/v3/customers?${params.toString()}`);
+  return payload.data?.[0] ?? null;
 }
 
 async function asaasRequest<T>(path: string, init: RequestInit = {}) {
