@@ -38,9 +38,13 @@ export function SubscriptionView({
   const billingCycle = subscription?.billing_cycle ?? "monthly";
   const maxProfessionals = subscription?.max_professionals ?? currentPlan.maxProfessionals;
   const maxServices = subscription?.max_services ?? currentPlan.maxServices;
-  const statusLabel = subscriptionStatusLabels[subscription?.status ?? "trialing"];
   const checkoutExpired = paymentStatus === "expirado";
-  const checkoutUrl = checkoutExpired ? null : getStoredCheckoutUrl(subscription);
+  const checkoutReturnedSuccess = paymentStatus === "sucesso" || getCheckoutReturnStatus(subscription) === "sucesso";
+  const statusLabel =
+    checkoutReturnedSuccess && subscription?.status === "pending"
+      ? "Pagamento confirmado"
+      : subscriptionStatusLabels[subscription?.status ?? "trialing"];
+  const checkoutUrl = checkoutExpired || checkoutReturnedSuccess ? null : getStoredCheckoutUrl(subscription);
 
   async function handleCheckout(planId: PlanId) {
     if (planId === currentPlanId && checkoutUrl) {
@@ -105,6 +109,15 @@ export function SubscriptionView({
                     {statusLabel}
                   </span>
                 </div>
+
+                {checkoutReturnedSuccess && subscription?.status === "pending" && (
+                  <div className="mt-4 rounded-lg bg-emerald-50 p-4">
+                    <p className="text-sm text-emerald-800">
+                      Pagamento confirmado no Asaas. Agora estamos aguardando a baixa automática para ativar a
+                      assinatura no sistema.
+                    </p>
+                  </div>
+                )}
 
                 {checkoutUrl && (
                   <div className="mt-4 rounded-lg bg-secondary p-4">
@@ -242,13 +255,32 @@ function getStoredCheckoutUrl(subscription: BusinessSubscriptionRecord | null) {
   return checkout.link.startsWith("https://") ? checkout.link : null;
 }
 
+function getCheckoutReturnStatus(subscription: BusinessSubscriptionRecord | null) {
+  const metadata = subscription?.metadata;
+
+  if (!isRecord(metadata)) {
+    return null;
+  }
+
+  const checkout = metadata.asaas_checkout;
+
+  if (!isRecord(checkout) || typeof checkout.return_status !== "string") {
+    return null;
+  }
+
+  return checkout.return_status;
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 
 function getPaymentStatusMessage(status: "sucesso" | "cancelado" | "expirado" | undefined) {
   if (status === "sucesso") {
-    return { type: "success" as const, text: "Pagamento recebido pelo Asaas. A assinatura será atualizada pelo webhook." };
+    return {
+      type: "success" as const,
+      text: "Pagamento confirmado no Asaas. A assinatura será ativada assim que a baixa automática chegar ao sistema.",
+    };
   }
 
   if (status === "cancelado") {

@@ -125,6 +125,7 @@ export async function POST(request: Request) {
     const checkoutItemName = sanitizeAsaasText(`Mireva Agenda ${plan.name}`, "Mireva Agenda Plano", 30);
     const checkoutItemDescription = sanitizeAsaasText(`Plano ${plan.name} do Mireva Agenda`, "Plano Mireva Agenda", 80);
     const customerName = getAsaasCustomerName(business.name);
+    const checkoutReturnToken = crypto.randomUUID();
     const asaasCustomerId = await getOrCreateAsaasCustomerId({
       existingCustomerId: currentSubscription?.provider_customer_id,
       name: customerName,
@@ -141,9 +142,9 @@ export async function POST(request: Request) {
       externalReference: preparedSubscription.id,
       customer: asaasCustomerId,
       callback: {
-        successUrl: `${origin}/assinatura?pagamento=sucesso`,
-        cancelUrl: `${origin}/assinatura?pagamento=cancelado`,
-        expiredUrl: `${origin}/assinatura?pagamento=expirado`,
+        successUrl: `${origin}/api/payments/checkout/return?pagamento=sucesso&token=${checkoutReturnToken}`,
+        cancelUrl: `${origin}/api/payments/checkout/return?pagamento=cancelado&token=${checkoutReturnToken}`,
+        expiredUrl: `${origin}/api/payments/checkout/return?pagamento=expirado&token=${checkoutReturnToken}`,
       },
       items: [
         {
@@ -179,6 +180,7 @@ export async function POST(request: Request) {
             billing_cycle: billingCycle,
             next_due_date: nextDueDate,
             requested_at: new Date().toISOString(),
+            return_token: checkoutReturnToken,
           },
         },
       })
