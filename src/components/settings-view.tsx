@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CreditCard, Eye, Lock, Settings } from "lucide-react";
+import { CreditCard, Eye, Lock, Settings, Trash2 } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -9,6 +9,17 @@ import { AuthNotice } from "@/components/auth-notice";
 import { AdminShell } from "@/components/admin-shell";
 import { BusinessLogoField } from "@/components/business-logo-field";
 import { SectionHeading } from "@/components/section-heading";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogMedia,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -47,6 +58,7 @@ export function SettingsView({ business, usage }: { business: AppBusiness; usage
   const [publicSlug, setPublicSlug] = useState(business.slug);
   const [message, setMessage] = useState<{ type: "error" | "success"; text: string } | null>(null);
   const [planMessage, setPlanMessage] = useState<{ type: "error" | "success"; text: string } | null>(null);
+  const [accountMessage, setAccountMessage] = useState<{ type: "error" | "success"; text: string } | null>(null);
   const [subscription, setSubscription] = useState<BusinessSubscriptionRecord | null>(usage.subscription);
   const [currentPlanId, setCurrentPlanId] = useState<PlanId>(getSubscriptionPlan(usage.subscription?.plan_id).id);
   const [isPlanChooserOpen, setIsPlanChooserOpen] = useState(false);
@@ -54,6 +66,9 @@ export function SettingsView({ business, usage }: { business: AppBusiness; usage
   const [checkoutPlanId, setCheckoutPlanId] = useState<PlanId | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState("");
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
   const currentPlan = getSubscriptionPlan(currentPlanId);
   const billingCycle = subscription?.billing_cycle ?? "monthly";
   const canCustomizeTheme = currentPlanId !== "basic";
@@ -242,6 +257,32 @@ export function SettingsView({ business, usage }: { business: AppBusiness; usage
         text: error instanceof Error ? error.message : "Não foi possível criar o checkout do Asaas.",
       });
       setCheckoutPlanId(null);
+    }
+  }
+
+  async function handleDeleteAccount() {
+    setIsDeletingAccount(true);
+    setAccountMessage(null);
+
+    try {
+      const response = await fetch("/api/account", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ confirmation: deleteConfirmation.trim().toUpperCase() }),
+      });
+      const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+
+      if (!response.ok) {
+        throw new Error(payload?.error ?? "Não foi possível apagar a conta agora.");
+      }
+
+      window.location.assign("/login");
+    } catch (error) {
+      setAccountMessage({
+        type: "error",
+        text: error instanceof Error ? error.message : "Não foi possível apagar a conta agora.",
+      });
+      setIsDeletingAccount(false);
     }
   }
 
@@ -529,8 +570,75 @@ export function SettingsView({ business, usage }: { business: AppBusiness; usage
               </div>
             </CardContent>
           </Card>
+
+          <Card className="border-destructive/25">
+            <CardContent className="space-y-4 p-5">
+              <SectionHeading title="Conta" icon={Trash2} />
+              {accountMessage && <AuthNotice type={accountMessage.type} message={accountMessage.text} />}
+              <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-4">
+                <p className="font-medium text-slate-950">Apagar conta</p>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Remove seu usuário, o estabelecimento e os dados vinculados a ele. Esta ação não pode ser desfeita.
+                </p>
+                <Button
+                  className="mt-4"
+                  type="button"
+                  variant="destructive"
+                  onClick={() => {
+                    setDeleteConfirmation("");
+                    setAccountMessage(null);
+                    setIsDeleteDialogOpen(true);
+                  }}
+                >
+                  Apagar conta
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
+      <AlertDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={(open) => {
+          if (!open && !isDeletingAccount) {
+            setDeleteConfirmation("");
+          }
+          setIsDeleteDialogOpen(open);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogMedia className="bg-destructive/10 text-destructive">
+              <Trash2 />
+            </AlertDialogMedia>
+            <AlertDialogTitle>Apagar conta definitivamente?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação remove sua conta e os dados do estabelecimento. Para confirmar, digite APAGAR no campo abaixo.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-2">
+            <Label htmlFor="delete-account-confirmation">Confirmação</Label>
+            <Input
+              id="delete-account-confirmation"
+              value={deleteConfirmation}
+              disabled={isDeletingAccount}
+              placeholder="Digite APAGAR"
+              onChange={(event) => setDeleteConfirmation(event.target.value)}
+            />
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeletingAccount}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              type="button"
+              variant="destructive"
+              disabled={deleteConfirmation.trim().toUpperCase() !== "APAGAR" || isDeletingAccount}
+              onClick={handleDeleteAccount}
+            >
+              {isDeletingAccount ? "Apagando..." : "Apagar conta"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AdminShell>
   );
 }
