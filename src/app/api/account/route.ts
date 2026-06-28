@@ -44,6 +44,9 @@ export async function DELETE(request: NextRequest) {
       .eq("id", membership.business_id)
       .maybeSingle();
 
+    await admin.from("payment_webhook_events").delete().eq("business_id", membership.business_id);
+    await admin.from("business_subscriptions").delete().eq("business_id", membership.business_id);
+
     const { error: businessError } = await admin.from("businesses").delete().eq("id", membership.business_id);
 
     if (businessError) {

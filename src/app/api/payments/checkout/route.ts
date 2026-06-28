@@ -98,7 +98,7 @@ export async function POST(request: Request) {
   try {
     const origin = new URL(request.url).origin;
     const checkout = await createAsaasCheckout({
-      billingTypes: ["CREDIT_CARD", "PIX"],
+      billingTypes: ["CREDIT_CARD"],
       chargeTypes: ["RECURRENT"],
       minutesToExpire: 1440,
       externalReference: preparedSubscription.id,
@@ -158,12 +158,56 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ checkoutUrl, subscription });
   } catch (error) {
+    await restoreSubscriptionAfterCheckoutFailure(
+      admin,
+      preparedSubscription.id,
+      currentSubscription as BusinessSubscriptionRecord | null,
+    );
+
     if (error instanceof AsaasApiError) {
       return NextResponse.json({ error: error.message, code: error.code }, { status: error.status });
     }
 
     return NextResponse.json({ error: "Não foi possível criar o checkout do Asaas." }, { status: 500 });
   }
+}
+
+async function restoreSubscriptionAfterCheckoutFailure(
+  admin: ReturnType<typeof createAdminClient>,
+  preparedSubscriptionId: string,
+  previousSubscription: BusinessSubscriptionRecord | null,
+) {
+  if (!previousSubscription) {
+    await admin.from("business_subscriptions").delete().eq("id", preparedSubscriptionId);
+    return;
+  }
+
+  await admin
+    .from("business_subscriptions")
+    .update({
+      plan_id: previousSubscription.plan_id,
+      billing_cycle: previousSubscription.billing_cycle,
+      status: previousSubscription.status,
+      max_professionals: previousSubscription.max_professionals,
+      max_services: previousSubscription.max_services,
+      current_period_started_at: previousSubscription.current_period_started_at,
+      current_period_ends_at: previousSubscription.current_period_ends_at,
+      trial_ends_at: previousSubscription.trial_ends_at,
+      provider: previousSubscription.provider,
+      provider_customer_id: previousSubscription.provider_customer_id,
+      provider_subscription_id: previousSubscription.provider_subscription_id,
+      provider_plan_id: previousSubscription.provider_plan_id,
+      provider_checkout_id: previousSubscription.provider_checkout_id,
+      provider_payment_method: previousSubscription.provider_payment_method,
+      provider_status: previousSubscription.provider_status,
+      started_at: previousSubscription.started_at,
+      renews_at: previousSubscription.renews_at,
+      cancel_requested_at: previousSubscription.cancel_requested_at,
+      cancel_at_period_end: previousSubscription.cancel_at_period_end,
+      metadata: previousSubscription.metadata,
+      canceled_at: previousSubscription.canceled_at,
+    })
+    .eq("id", previousSubscription.id);
 }
 
 function getNextDueDate(subscription: BusinessSubscriptionRecord | null, billingCycle: "monthly" | "annual") {
