@@ -48,10 +48,6 @@ export async function POST(request: Request) {
 
   const cpfCnpj = onlyDigits(parsed.data.cpfCnpj);
 
-  if (!cpfCnpj || !isValidCpfCnpj(cpfCnpj)) {
-    return NextResponse.json({ error: "Informe um CPF ou CNPJ válido para abrir o checkout do Asaas." }, { status: 400 });
-  }
-
   const admin = createAdminClient();
   const { data: membership } = await admin
     .from("business_members")
@@ -80,6 +76,14 @@ export async function POST(request: Request) {
     .select(subscriptionSelect)
     .eq("business_id", business.id)
     .maybeSingle();
+
+  if (cpfCnpj && !isValidCpfCnpj(cpfCnpj)) {
+    return NextResponse.json({ error: "Informe um CPF ou CNPJ válido para abrir o checkout do Asaas." }, { status: 400 });
+  }
+
+  if (!cpfCnpj && !currentSubscription?.provider_customer_id) {
+    return NextResponse.json({ error: "Informe um CPF ou CNPJ válido para abrir o checkout do Asaas." }, { status: 400 });
+  }
 
   const billingCycle = parsed.data.billingCycle ?? currentSubscription?.billing_cycle ?? "monthly";
   const plan = getSubscriptionPlan(parsed.data.planId);
@@ -272,7 +276,7 @@ function isValidCpfCnpj(value: string | undefined) {
 async function getOrCreateAsaasCustomerId(input: {
   existingCustomerId: string | null | undefined;
   name: string;
-  cpfCnpj: string;
+  cpfCnpj: string | undefined;
   email: string | undefined;
   phone: string | null | undefined;
   address: AsaasBillingAddress;
@@ -281,8 +285,16 @@ async function getOrCreateAsaasCustomerId(input: {
   const payload = getAsaasCustomerPayload(input);
 
   if (input.existingCustomerId) {
+    if (!input.cpfCnpj) {
+      return input.existingCustomerId;
+    }
+
     const updatedCustomer = await updateAsaasCustomer(input.existingCustomerId, payload);
     return updatedCustomer.id;
+  }
+
+  if (!input.cpfCnpj) {
+    throw new AsaasApiError("Informe um CPF ou CNPJ válido para abrir o checkout do Asaas.", 400, "missing_cpf_cnpj");
   }
 
   const existingCustomer = await findAsaasCustomerByCpfCnpj(input.cpfCnpj);
@@ -306,7 +318,7 @@ type AsaasBillingAddress = {
 
 function getAsaasCustomerPayload(input: {
   name: string;
-  cpfCnpj: string;
+  cpfCnpj: string | undefined;
   email: string | undefined;
   phone: string | null | undefined;
   address: AsaasBillingAddress;

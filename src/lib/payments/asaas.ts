@@ -18,7 +18,7 @@ export type AsaasCustomerResponse = {
 
 export type AsaasCustomerPayload = {
   name: string;
-  cpfCnpj: string;
+  cpfCnpj?: string;
   email?: string;
   phone?: string;
   mobilePhone?: string;

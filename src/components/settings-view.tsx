@@ -64,7 +64,6 @@ export function SettingsView({ business, usage }: { business: AppBusiness; usage
   const [isPlanChooserOpen, setIsPlanChooserOpen] = useState(false);
   const [changingPlanId, setChangingPlanId] = useState<PlanId | null>(null);
   const [checkoutPlanId, setCheckoutPlanId] = useState<PlanId | null>(null);
-  const [checkoutCpfCnpj, setCheckoutCpfCnpj] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -78,6 +77,7 @@ export function SettingsView({ business, usage }: { business: AppBusiness; usage
   const maxProfessionals = subscription?.max_professionals ?? currentPlan.maxProfessionals;
   const maxServices = subscription?.max_services ?? currentPlan.maxServices;
   const statusLabel = subscriptionStatusLabels[subscription?.status ?? "trialing"];
+  const checkoutUrl = getStoredCheckoutUrl(subscription);
   const form = useForm<SettingsForm>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -227,6 +227,11 @@ export function SettingsView({ business, usage }: { business: AppBusiness; usage
   }
 
   async function handleCheckout(planId: PlanId) {
+    if (checkoutUrl) {
+      window.location.assign(checkoutUrl);
+      return;
+    }
+
     setCheckoutPlanId(planId);
     setPlanMessage(null);
 
@@ -234,7 +239,7 @@ export function SettingsView({ business, usage }: { business: AppBusiness; usage
       const response = await fetch("/api/payments/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ planId, billingCycle, cpfCnpj: checkoutCpfCnpj }),
+        body: JSON.stringify({ planId, billingCycle }),
       });
       const payload = (await response.json().catch(() => null)) as {
         checkoutUrl?: string;
@@ -399,18 +404,6 @@ export function SettingsView({ business, usage }: { business: AppBusiness; usage
                     {usage.servicesCount}/{maxServices}
                   </strong>
                 </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="subscription-cpf-cnpj">CPF/CNPJ para cobrança</Label>
-                <Input
-                  id="subscription-cpf-cnpj"
-                  value={checkoutCpfCnpj}
-                  inputMode="numeric"
-                  placeholder="000.000.000-00 ou 00.000.000/0000-00"
-                  onChange={(event) => setCheckoutCpfCnpj(event.target.value)}
-                />
-                <p className="text-xs text-muted-foreground">Necessário para abrir o checkout no Asaas.</p>
               </div>
 
               <div className="flex flex-wrap gap-2">
@@ -654,4 +647,28 @@ export function SettingsView({ business, usage }: { business: AppBusiness; usage
       </AlertDialog>
     </AdminShell>
   );
+}
+
+function getStoredCheckoutUrl(subscription: BusinessSubscriptionRecord | null) {
+  if (!subscription?.provider_checkout_id || subscription.provider_subscription_id) {
+    return null;
+  }
+
+  const metadata = subscription.metadata;
+
+  if (!isRecord(metadata)) {
+    return null;
+  }
+
+  const checkout = metadata.asaas_checkout;
+
+  if (!isRecord(checkout) || typeof checkout.link !== "string") {
+    return null;
+  }
+
+  return checkout.link.startsWith("https://") ? checkout.link : null;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
