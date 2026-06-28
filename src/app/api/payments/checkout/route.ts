@@ -2,7 +2,13 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getCurrentBusiness, getCurrentUser } from "@/lib/auth/server";
 import type { BusinessSubscriptionRecord } from "@/lib/business/types";
-import { AsaasApiError, createAsaasCheckout, createAsaasCustomer, findAsaasCustomerByCpfCnpj } from "@/lib/payments/asaas";
+import {
+  AsaasApiError,
+  createAsaasCheckout,
+  createAsaasCustomer,
+  findAsaasCustomerByCpfCnpj,
+  updateAsaasCustomer,
+} from "@/lib/payments/asaas";
 import { getSubscriptionPlan, planIds } from "@/lib/plans";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -107,15 +113,16 @@ export async function POST(request: Request) {
     const checkoutItemName = sanitizeAsaasText(`Mireva Agenda ${plan.name}`, "Mireva Agenda Plano", 30);
     const checkoutItemDescription = sanitizeAsaasText(`Plano ${plan.name} do Mireva Agenda`, "Plano Mireva Agenda", 80);
     const customerName = getAsaasCustomerName(business.name);
-    const asaasCustomerId =
-      currentSubscription?.provider_customer_id ??
-      (await getOrCreateAsaasCustomerId({
-        name: customerName,
-        cpfCnpj,
-        email: user.email,
-        phone: business.whatsapp,
-        externalReference: business.id,
-      }));
+    const billingAddress = getAsaasBillingAddress(business.address);
+    const asaasCustomerId = await getOrCreateAsaasCustomerId({
+      existingCustomerId: currentSubscription?.provider_customer_id,
+      name: customerName,
+      cpfCnpj,
+      email: user.email,
+      phone: business.whatsapp,
+      address: billingAddress,
+      externalReference: business.id,
+    });
     const checkout = await createAsaasCheckout({
       billingTypes: ["CREDIT_CARD"],
       chargeTypes: ["RECURRENT"],
@@ -256,35 +263,105 @@ function isValidCpfCnpj(value: string | undefined) {
 }
 
 async function getOrCreateAsaasCustomerId(input: {
+  existingCustomerId: string | null | undefined;
   name: string;
   cpfCnpj: string;
   email: string | undefined;
   phone: string | null | undefined;
+  address: AsaasBillingAddress;
   externalReference: string;
 }) {
+  const payload = getAsaasCustomerPayload(input);
+
+  if (input.existingCustomerId) {
+    const updatedCustomer = await updateAsaasCustomer(input.existingCustomerId, payload);
+    return updatedCustomer.id;
+  }
+
   const existingCustomer = await findAsaasCustomerByCpfCnpj(input.cpfCnpj);
 
   if (existingCustomer?.id) {
-    return existingCustomer.id;
+    const updatedCustomer = await updateAsaasCustomer(existingCustomer.id, payload);
+    return updatedCustomer.id;
   }
 
+  const customer = await createAsaasCustomer(payload);
+
+  return customer.id;
+}
+
+type AsaasBillingAddress = {
+  address: string;
+  addressNumber: string;
+  province: string;
+  postalCode?: string;
+};
+
+function getAsaasCustomerPayload(input: {
+  name: string;
+  cpfCnpj: string;
+  email: string | undefined;
+  phone: string | null | undefined;
+  address: AsaasBillingAddress;
+  externalReference: string;
+}) {
   const phone = onlyDigits(input.phone);
-  const customer = await createAsaasCustomer({
+
+  return {
     name: input.name,
     cpfCnpj: input.cpfCnpj,
     email: input.email,
     phone,
     mobilePhone: phone,
+    address: input.address.address,
+    addressNumber: input.address.addressNumber,
+    province: input.address.province,
+    postalCode: input.address.postalCode,
     externalReference: input.externalReference,
     notificationDisabled: true,
-  });
-
-  return customer.id;
+  };
 }
 
 function getAsaasCustomerName(value: string | null | undefined) {
   const name = sanitizeAsaasText(value, "Cliente Mireva Agenda", 80);
   return name.includes(" ") ? name : `${name} Mireva`;
+}
+
+function getAsaasBillingAddress(value: string | null | undefined): AsaasBillingAddress {
+  const fallbackAddress = "Endereco nao informado";
+  const normalized = sanitizeAsaasText(value, fallbackAddress, 180);
+  const postalCode = onlyDigits(normalized.match(/\b\d{5}-?\d{3}\b/)?.[0]);
+  const withoutPostalCode = postalCode
+    ? normalized.replace(/\b\d{5}-?\d{3}\b/, " ").replace(/\s+/g, " ").trim()
+    : normalized;
+  const addressNumber = withoutPostalCode.match(/\b\d{1,6}\b/)?.[0] ?? "S/N";
+  const province = sanitizeAsaasText(getProvinceFromAddress(withoutPostalCode), "Centro", 60);
+  const address = sanitizeAsaasText(
+    withoutPostalCode
+      .replace(new RegExp(`\\b${escapeRegExp(addressNumber)}\\b`), " ")
+      .split("-")[0]
+      .split(",")[0],
+    fallbackAddress,
+    120,
+  );
+
+  return {
+    address,
+    addressNumber,
+    province,
+    postalCode,
+  };
+}
+
+function getProvinceFromAddress(value: string) {
+  const afterDash = value.split("-").slice(1).join("-").trim();
+
+  if (afterDash) {
+    return afterDash;
+  }
+
+  const parts = value.split(",").map((part) => part.trim()).filter(Boolean);
+  return parts.length > 2 ? parts[parts.length - 1] : "";
 }
 
 function sanitizeAsaasText(value: string | null | undefined, fallback: string, maxLength: number) {
@@ -297,6 +374,10 @@ function sanitizeAsaasText(value: string | null | undefined, fallback: string, m
 
   const safeValue = sanitized && sanitized.length >= 2 ? sanitized : fallback;
   return safeValue.slice(0, maxLength).trim() || fallback.slice(0, maxLength);
+}
+
+function escapeRegExp(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 function buildFallbackCheckoutUrl(id: string) {

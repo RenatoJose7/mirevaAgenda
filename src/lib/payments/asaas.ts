@@ -22,6 +22,11 @@ export type AsaasCustomerPayload = {
   email?: string;
   phone?: string;
   mobilePhone?: string;
+  address?: string;
+  addressNumber?: string;
+  complement?: string;
+  province?: string;
+  postalCode?: string;
   externalReference?: string;
   notificationDisabled?: boolean;
 };
@@ -87,6 +92,13 @@ export async function createAsaasCheckout(payload: AsaasCheckoutPayload) {
 export async function createAsaasCustomer(payload: AsaasCustomerPayload) {
   return asaasRequest<AsaasCustomerResponse>("/v3/customers", {
     method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function updateAsaasCustomer(id: string, payload: AsaasCustomerPayload) {
+  return asaasRequest<AsaasCustomerResponse>(`/v3/customers/${encodeURIComponent(id)}`, {
+    method: "PUT",
     body: JSON.stringify(payload),
   });
 }
