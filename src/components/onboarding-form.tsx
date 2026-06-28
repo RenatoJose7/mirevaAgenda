@@ -33,7 +33,11 @@ const schema = z.object({
       return digits.length === 11 || digits.length === 14;
     }, "Informe um CPF ou CNPJ válido."),
   whatsapp: z.string().optional(),
-  address: z.string().optional(),
+  address: z
+    .string()
+    .trim()
+    .min(1, "Informe o endereço do estabelecimento.")
+    .refine((value) => hasPostalCode(value), "Inclua o CEP no endereço para abrir o checkout do Asaas."),
   note: z.string().optional(),
 });
 
@@ -208,7 +212,14 @@ export function OnboardingForm() {
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="business-address">Endereço</Label>
-                        <Input id="business-address" {...form.register("address")} placeholder="Rua, número - bairro" />
+                        <Input
+                          id="business-address"
+                          {...form.register("address")}
+                          placeholder="Rua, número - bairro, CEP 00000-000"
+                        />
+                        {form.formState.errors.address && (
+                          <p className="text-sm text-destructive">{form.formState.errors.address.message}</p>
+                        )}
                       </div>
                     </div>
                     <BusinessLogoField
@@ -433,4 +444,8 @@ function getOnboardingErrorMessage(message: string) {
   }
 
   return `Não foi possível criar o estabelecimento: ${message}`;
+}
+
+function hasPostalCode(value: string) {
+  return /\b\d{5}[-\s]?\d{3}\b/.test(value);
 }

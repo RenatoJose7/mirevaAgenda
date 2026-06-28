@@ -85,6 +85,14 @@ export async function POST(request: Request) {
   const plan = getSubscriptionPlan(parsed.data.planId);
   const priceCents = billingCycle === "annual" ? plan.annualPriceCents : plan.priceCents;
   const nextDueDate = getNextDueDate(currentSubscription as BusinessSubscriptionRecord | null, billingCycle);
+  const billingAddress = getAsaasBillingAddress(business.address);
+
+  if (!billingAddress.postalCode) {
+    return NextResponse.json(
+      { error: "Informe o CEP no endereço do estabelecimento para abrir o checkout do Asaas." },
+      { status: 400 },
+    );
+  }
 
   const { data: preparedSubscription, error: prepareError } = await admin
     .from("business_subscriptions")
@@ -113,7 +121,6 @@ export async function POST(request: Request) {
     const checkoutItemName = sanitizeAsaasText(`Mireva Agenda ${plan.name}`, "Mireva Agenda Plano", 30);
     const checkoutItemDescription = sanitizeAsaasText(`Plano ${plan.name} do Mireva Agenda`, "Plano Mireva Agenda", 80);
     const customerName = getAsaasCustomerName(business.name);
-    const billingAddress = getAsaasBillingAddress(business.address);
     const asaasCustomerId = await getOrCreateAsaasCustomerId({
       existingCustomerId: currentSubscription?.provider_customer_id,
       name: customerName,
@@ -330,9 +337,9 @@ function getAsaasCustomerName(value: string | null | undefined) {
 function getAsaasBillingAddress(value: string | null | undefined): AsaasBillingAddress {
   const fallbackAddress = "Endereco nao informado";
   const normalized = sanitizeAsaasText(value, fallbackAddress, 180);
-  const postalCode = onlyDigits(normalized.match(/\b\d{5}-?\d{3}\b/)?.[0]);
+  const postalCode = onlyDigits(normalized.match(/\b\d{5}[-\s]?\d{3}\b/)?.[0]);
   const withoutPostalCode = postalCode
-    ? normalized.replace(/\b\d{5}-?\d{3}\b/, " ").replace(/\s+/g, " ").trim()
+    ? normalized.replace(/\b\d{5}[-\s]?\d{3}\b/, " ").replace(/\s+/g, " ").trim()
     : normalized;
   const addressNumber = withoutPostalCode.match(/\b\d{1,6}\b/)?.[0] ?? "S/N";
   const province = sanitizeAsaasText(getProvinceFromAddress(withoutPostalCode), "Centro", 60);
