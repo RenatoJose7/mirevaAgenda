@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CheckCircle2, CreditCard, Loader2 } from "lucide-react";
+import { CheckCircle2, ClipboardCheck, CreditCard, ExternalLink, Loader2, WalletCards } from "lucide-react";
 import { AdminShell } from "@/components/admin-shell";
 import { AuthNotice } from "@/components/auth-notice";
 import { SectionHeading } from "@/components/section-heading";
@@ -149,114 +149,123 @@ export function SubscriptionView({
       <div className="space-y-6">
         {message && <AuthNotice type={message.type} message={message.text} />}
 
-        <div className="grid gap-6 lg:grid-cols-[1fr_0.85fr]">
-          <Card>
-            <CardContent className="space-y-5 p-5">
-              <SectionHeading title="Plano atual" icon={CreditCard} />
-              <div className="rounded-lg border bg-white p-5">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Assinatura</p>
-                    <h3 className="mt-1 text-2xl font-semibold text-slate-950">{currentPlan.name}</h3>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      {getPlanPriceLabel(currentPlan, currentBillingCycle)}
-                    </p>
-                  </div>
-                  <span className="w-fit rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
-                    {statusLabel}
-                  </span>
-                </div>
-
-                {checkoutReturnedSuccess && subscription?.status === "pending" && (
-                  <div className="mt-4 rounded-lg bg-emerald-50 p-4">
-                    <p className="text-sm text-emerald-800">
-                      Pagamento confirmado no Asaas. Agora estamos aguardando a baixa automática para ativar a
-                      assinatura no sistema.
-                    </p>
-                  </div>
-                )}
-
-                {pendingPlanChange && pendingPlan && (
-                  <div className="mt-4 rounded-lg bg-amber-50 p-4">
-                    <p className="text-sm font-medium text-amber-900">
-                      Alteracao solicitada para {pendingPlan.name} ({getBillingCycleLabel(pendingPlanChange.billingCycle)}).
-                    </p>
-                    <p className="mt-1 text-sm text-amber-800">
-                      Aplicacao prevista para o fim do ciclo atual{getPeriodEndLabel(subscription)}.
-                    </p>
-                  </div>
-                )}
-
-                {checkoutUrl && (
-                  <div className="mt-4 rounded-lg bg-secondary p-4">
-                    <p className="text-sm text-muted-foreground">
-                      Checkout Asaas criado. Continue pelo botão abaixo se ainda não concluiu o pagamento.
-                    </p>
-                    <Button className="mt-3" type="button" onClick={() => void handleCheckout(currentPlanId)}>
-                      Continuar no Asaas
-                    </Button>
-                  </div>
-                )}
+        <div className="grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)]">
+          <Card className="bg-white">
+            <CardContent className="space-y-5 p-5 sm:p-6">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                <SectionHeading title="Plano atual" icon={CreditCard} />
+                <span
+                  className={cn(
+                    "w-fit rounded-full px-3 py-1 text-xs font-semibold",
+                    getStatusBadgeClass(subscription, checkoutReturnedSuccess),
+                  )}
+                >
+                  {statusLabel}
+                </span>
               </div>
+
+              <div className="grid gap-3 md:grid-cols-3">
+                <SummaryTile
+                  label="Plano"
+                  value={currentPlan.name}
+                  helper={getPlanPriceLabel(currentPlan, currentBillingCycle)}
+                />
+                <SummaryTile
+                  label="Ciclo"
+                  value={getBillingCycleTitle(currentBillingCycle)}
+                  helper={getPlanCycleHelper(currentPlan, currentBillingCycle)}
+                />
+                <SummaryTile
+                  label="Próxima data"
+                  value={formatDate(subscription?.current_period_ends_at ?? subscription?.renews_at) ?? "Pendente"}
+                  helper={managedActiveSubscription ? "Renovação ou fim do ciclo" : "Confirmada após pagamento"}
+                />
+              </div>
+
+              {checkoutReturnedSuccess && subscription?.status === "pending" && (
+                <div className="flex gap-3 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
+                  <CheckCircle2 className="mt-0.5 size-4 shrink-0" />
+                  <p>
+                    Pagamento confirmado no Asaas. A assinatura será ativada assim que a confirmação automática chegar
+                    ao sistema.
+                  </p>
+                </div>
+              )}
+
+              {pendingPlanChange && pendingPlan && (
+                <div className="flex gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+                  <ClipboardCheck className="mt-0.5 size-4 shrink-0" />
+                  <div>
+                    <p className="font-medium text-amber-900">
+                      Alteração solicitada para {pendingPlan.name} ({getBillingCycleLabel(pendingPlanChange.billingCycle)}).
+                    </p>
+                    <p className="mt-1">
+                      Aplicação prevista para o fim do ciclo atual{getPeriodEndLabel(subscription)}.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {checkoutUrl && (
+                <div className="flex flex-col gap-3 rounded-lg border border-primary/20 bg-primary/5 p-4 text-sm text-slate-700 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex gap-3">
+                    <WalletCards className="mt-0.5 size-4 shrink-0 text-primary" />
+                    <p>Checkout Asaas criado. Continue por aqui se o pagamento ainda não foi concluído.</p>
+                  </div>
+                  <Button className="w-full sm:w-auto" type="button" onClick={() => void handleCheckout(currentPlanId)}>
+                    <ExternalLink className="size-4" />
+                    Continuar no Asaas
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
 
-          <Card>
-            <CardContent className="space-y-4 p-5">
-              <SectionHeading title="Uso do plano" />
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
-                <div className="rounded-lg bg-secondary p-4">
-                  <p className="text-sm text-muted-foreground">Profissionais</p>
-                  <strong className="mt-1 block text-2xl text-slate-950">
-                    {usage.professionalsCount}/{maxProfessionals}
-                  </strong>
-                </div>
-                <div className="rounded-lg bg-secondary p-4">
-                  <p className="text-sm text-muted-foreground">Serviços</p>
-                  <strong className="mt-1 block text-2xl text-slate-950">
-                    {usage.servicesCount}/{maxServices}
-                  </strong>
-                </div>
+          <Card className="bg-white">
+            <CardContent className="space-y-5 p-5 sm:p-6">
+              <SectionHeading title="Uso do plano" icon={WalletCards} />
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
+                <UsageTile label="Profissionais" current={usage.professionalsCount} limit={maxProfessionals} />
+                <UsageTile label="Serviços" current={usage.servicesCount} limit={maxServices} />
               </div>
             </CardContent>
           </Card>
         </div>
 
-        <Card>
-          <CardContent className="space-y-5 p-5">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-              <SectionHeading
-                eyebrow="Planos"
-                title="Escolha o plano"
-                description={
-                  managedActiveSubscription
-                    ? "Alterações em assinatura ativa ficam pendentes para o fim do ciclo."
-                    : "Ao selecionar outro plano, o checkout do Asaas abre automaticamente."
-                }
-              />
+        <section className="space-y-5">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <SectionHeading
+              eyebrow="Planos"
+              title="Escolha o plano"
+              description={
+                managedActiveSubscription
+                  ? "Alterações em assinatura ativa ficam pendentes para o fim do ciclo."
+                  : "Ao selecionar outro plano, o checkout do Asaas abre automaticamente."
+              }
+            />
 
-              <div className="w-full max-w-xs">
-                <p className="mb-2 text-xs font-semibold uppercase text-muted-foreground">Ciclo de cobrança</p>
-                <div className="grid grid-cols-2 rounded-lg border bg-white p-1 text-sm">
-                  {[
-                    ["monthly", "Mensal"],
-                    ["annual", "Anual"],
-                  ].map(([id, label]) => (
-                    <button
-                      key={id}
-                      type="button"
-                      onClick={() => setSelectedBillingCycle(id as BillingCycle)}
-                      className={cn(
-                        "rounded-md px-4 py-2 font-medium transition",
-                        selectedBillingCycle === id ? "bg-primary text-primary-foreground" : "text-muted-foreground",
-                      )}
-                    >
-                      {label}
-                    </button>
-                  ))}
-                </div>
+            <div className="w-full max-w-xs">
+              <p className="mb-2 text-xs font-semibold uppercase text-muted-foreground">Ciclo de cobrança</p>
+              <div className="grid grid-cols-2 rounded-lg border bg-white p-1 text-sm">
+                {[
+                  ["monthly", "Mensal"],
+                  ["annual", "Anual"],
+                ].map(([id, label]) => (
+                  <button
+                    key={id}
+                    type="button"
+                    onClick={() => setSelectedBillingCycle(id as BillingCycle)}
+                    className={cn(
+                      "rounded-md px-4 py-2 font-medium transition",
+                      selectedBillingCycle === id ? "bg-primary text-primary-foreground" : "text-muted-foreground",
+                    )}
+                  >
+                    {label}
+                  </button>
+                ))}
               </div>
             </div>
+          </div>
 
             <div className="grid gap-4 lg:grid-cols-3">
               {subscriptionPlans.map((plan) => {
@@ -281,8 +290,8 @@ export function SubscriptionView({
                   <div
                     key={plan.id}
                     className={cn(
-                      "flex min-h-[420px] flex-col rounded-lg border bg-white p-5",
-                      isCurrent && "border-primary ring-2 ring-primary/15",
+                      "flex min-h-[430px] flex-col rounded-lg border bg-white p-5 shadow-sm transition",
+                      isCurrent ? "border-primary ring-2 ring-primary/15" : "border-border hover:border-primary/40",
                     )}
                   >
                     <div className="flex min-h-8 items-start justify-between gap-3">
@@ -327,7 +336,15 @@ export function SubscriptionView({
                       }
                       onClick={() => void handlePlanAction(plan.id)}
                     >
-                      {isBusy && <Loader2 className="size-4 animate-spin" />}
+                      {isBusy ? (
+                        <Loader2 className="size-4 animate-spin" />
+                      ) : shouldRequestChange ? (
+                        <ClipboardCheck className="size-4" />
+                      ) : canContinueCheckout || canRegenerateCheckout || !isCurrent ? (
+                        <ExternalLink className="size-4" />
+                      ) : (
+                        <CheckCircle2 className="size-4" />
+                      )}
                       {isBusy
                         ? shouldRequestChange
                           ? "Registrando..."
@@ -342,20 +359,47 @@ export function SubscriptionView({
                               : isCurrentCycle
                                 ? "Plano atual"
                                 : shouldRequestChange
-                                  ? "Solicitar alteracao"
+                                  ? "Solicitar alteração"
                                   : "Alterar ciclo no Asaas"
                             : shouldRequestChange
-                              ? "Solicitar alteracao"
+                              ? "Solicitar alteração"
                               : "Selecionar e abrir Asaas"}
                     </Button>
                   </div>
                 );
               })}
             </div>
-          </CardContent>
-        </Card>
+        </section>
       </div>
     </AdminShell>
+  );
+}
+
+function SummaryTile({ label, value, helper }: { label: string; value: string; helper?: string }) {
+  return (
+    <div className="rounded-lg border bg-secondary/60 p-4">
+      <p className="text-xs font-semibold uppercase text-muted-foreground">{label}</p>
+      <strong className="mt-2 block text-lg text-slate-950">{value}</strong>
+      {helper && <p className="mt-1 text-xs leading-5 text-muted-foreground">{helper}</p>}
+    </div>
+  );
+}
+
+function UsageTile({ label, current, limit }: { label: string; current: number; limit: number }) {
+  const percentage = limit > 0 ? Math.min(100, Math.round((current / limit) * 100)) : 0;
+
+  return (
+    <div className="rounded-lg border bg-secondary/60 p-4">
+      <div className="flex items-baseline justify-between gap-3">
+        <p className="text-sm text-muted-foreground">{label}</p>
+        <strong className="text-2xl text-slate-950">
+          {current}/{limit}
+        </strong>
+      </div>
+      <div className="mt-3 h-2 overflow-hidden rounded-full bg-white">
+        <div className="h-full rounded-full bg-primary" style={{ width: `${percentage}%` }} />
+      </div>
+    </div>
   );
 }
 
@@ -407,6 +451,30 @@ function getPendingPlanChange(subscription: BusinessSubscriptionRecord | null): 
     billingCycle,
     requestedAt: getString(change.requested_at),
   };
+}
+
+function getStatusBadgeClass(subscription: BusinessSubscriptionRecord | null, checkoutReturnedSuccess: boolean) {
+  if (checkoutReturnedSuccess && subscription?.status === "pending") {
+    return "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200";
+  }
+
+  if (subscription?.status === "active") {
+    return "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200";
+  }
+
+  if (subscription?.status === "past_due") {
+    return "bg-amber-50 text-amber-800 ring-1 ring-amber-200";
+  }
+
+  if (subscription?.status === "canceled") {
+    return "bg-slate-100 text-slate-600 ring-1 ring-slate-200";
+  }
+
+  return "bg-primary/10 text-primary ring-1 ring-primary/15";
+}
+
+function getBillingCycleTitle(billingCycle: BillingCycle) {
+  return billingCycle === "annual" ? "Anual" : "Mensal";
 }
 
 function getBillingCycleLabel(billingCycle: BillingCycle) {
