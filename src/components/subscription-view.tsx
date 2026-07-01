@@ -34,7 +34,7 @@ export function SubscriptionView({
   const [selectedBillingCycle, setSelectedBillingCycle] = useState<BillingCycle>(
     usage.subscription?.billing_cycle ?? "monthly",
   );
-  const [checkoutPlanId, setCheckoutPlanId] = useState<PlanId | null>(null);
+  const [busyPlanId, setBusyPlanId] = useState<PlanId | null>(null);
   const [message, setMessage] = useState<{ type: "error" | "success"; text: string } | null>(
     getPaymentStatusMessage(paymentStatus),
   );
@@ -52,6 +52,53 @@ export function SubscriptionView({
       ? "Pagamento confirmado"
       : subscriptionStatusLabels[subscription?.status ?? "trialing"];
   const checkoutUrl = checkoutExpired || checkoutReturnedSuccess ? null : getStoredCheckoutUrl(subscription);
+  const pendingPlanChange = getPendingPlanChange(subscription);
+  const pendingPlan = pendingPlanChange ? getSubscriptionPlan(pendingPlanChange.planId) : null;
+  const managedActiveSubscription = isManagedActiveSubscription(subscription);
+
+  async function handlePlanAction(planId: PlanId) {
+    if (shouldRequestPlanChange(subscription, planId, selectedBillingCycle, currentPlanId, currentBillingCycle)) {
+      await handlePlanChangeRequest(planId);
+      return;
+    }
+
+    await handleCheckout(planId);
+  }
+
+  async function handlePlanChangeRequest(planId: PlanId) {
+    setBusyPlanId(planId);
+    setMessage(null);
+
+    try {
+      const response = await fetch("/api/subscription", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ planId, billingCycle: selectedBillingCycle }),
+      });
+      const payload = (await response.json().catch(() => null)) as {
+        subscription?: BusinessSubscriptionRecord;
+        error?: string;
+      } | null;
+
+      if (!response.ok || !payload?.subscription) {
+        throw new Error(payload?.error ?? "Nao foi possivel registrar a solicitacao.");
+      }
+
+      setSubscription(payload.subscription);
+      setCurrentPlanId(payload.subscription.plan_id);
+      setMessage({
+        type: "success",
+        text: "Solicitacao registrada. A alteracao sera revisada para o fim do ciclo atual.",
+      });
+    } catch (error) {
+      setMessage({
+        type: "error",
+        text: error instanceof Error ? error.message : "Nao foi possivel registrar a solicitacao.",
+      });
+    } finally {
+      setBusyPlanId(null);
+    }
+  }
 
   async function handleCheckout(planId: PlanId) {
     if (planId === currentPlanId && selectedBillingCycle === currentBillingCycle && checkoutUrl) {
@@ -59,7 +106,7 @@ export function SubscriptionView({
       return;
     }
 
-    setCheckoutPlanId(planId);
+    setBusyPlanId(planId);
     setMessage(null);
 
     try {
@@ -87,7 +134,7 @@ export function SubscriptionView({
         type: "error",
         text: error instanceof Error ? error.message : "Não foi possível criar o checkout do Asaas.",
       });
-      setCheckoutPlanId(null);
+      setBusyPlanId(null);
     }
   }
 
@@ -125,6 +172,17 @@ export function SubscriptionView({
                     <p className="text-sm text-emerald-800">
                       Pagamento confirmado no Asaas. Agora estamos aguardando a baixa automática para ativar a
                       assinatura no sistema.
+                    </p>
+                  </div>
+                )}
+
+                {pendingPlanChange && pendingPlan && (
+                  <div className="mt-4 rounded-lg bg-amber-50 p-4">
+                    <p className="text-sm font-medium text-amber-900">
+                      Alteracao solicitada para {pendingPlan.name} ({getBillingCycleLabel(pendingPlanChange.billingCycle)}).
+                    </p>
+                    <p className="mt-1 text-sm text-amber-800">
+                      Aplicacao prevista para o fim do ciclo atual{getPeriodEndLabel(subscription)}.
                     </p>
                   </div>
                 )}
@@ -170,7 +228,11 @@ export function SubscriptionView({
               <SectionHeading
                 eyebrow="Planos"
                 title="Escolha o plano"
-                description="Ao selecionar outro plano, o checkout do Asaas abre automaticamente para concluir a alteração."
+                description={
+                  managedActiveSubscription
+                    ? "Alterações em assinatura ativa ficam pendentes para o fim do ciclo."
+                    : "Ao selecionar outro plano, o checkout do Asaas abre automaticamente."
+                }
               />
 
               <div className="w-full max-w-xs">
@@ -199,12 +261,21 @@ export function SubscriptionView({
             <div className="grid gap-4 lg:grid-cols-3">
               {subscriptionPlans.map((plan) => {
                 const isCurrent = plan.id === currentPlanId;
-                const isBusy = checkoutPlanId === plan.id;
+                const isBusy = busyPlanId === plan.id;
                 const isOverProfessionals = usage.professionalsCount > plan.maxProfessionals;
                 const isOverServices = usage.servicesCount > plan.maxServices;
                 const isCurrentCycle = isCurrent && selectedBillingCycle === currentBillingCycle;
                 const canContinueCheckout = isCurrentCycle && Boolean(checkoutUrl);
                 const canRegenerateCheckout = isCurrentCycle && checkoutExpired;
+                const shouldRequestChange = shouldRequestPlanChange(
+                  subscription,
+                  plan.id,
+                  selectedBillingCycle,
+                  currentPlanId,
+                  currentBillingCycle,
+                );
+                const isPendingRequest =
+                  pendingPlanChange?.planId === plan.id && pendingPlanChange.billingCycle === selectedBillingCycle;
 
                 return (
                   <div
@@ -249,12 +320,20 @@ export function SubscriptionView({
                       className="mt-auto"
                       type="button"
                       variant={isCurrentCycle && !canContinueCheckout ? "secondary" : "default"}
-                      disabled={(isCurrentCycle && !canContinueCheckout && !canRegenerateCheckout) || checkoutPlanId !== null}
-                      onClick={() => void handleCheckout(plan.id)}
+                      disabled={
+                        isPendingRequest ||
+                        (isCurrentCycle && !canContinueCheckout && !canRegenerateCheckout) ||
+                        busyPlanId !== null
+                      }
+                      onClick={() => void handlePlanAction(plan.id)}
                     >
                       {isBusy && <Loader2 className="size-4 animate-spin" />}
                       {isBusy
-                        ? "Abrindo Asaas..."
+                        ? shouldRequestChange
+                          ? "Registrando..."
+                          : "Abrindo Asaas..."
+                        : isPendingRequest
+                          ? "Solicitado"
                         : canContinueCheckout
                           ? "Continuar no Asaas"
                           : isCurrent
@@ -262,8 +341,12 @@ export function SubscriptionView({
                               ? "Gerar novo checkout"
                               : isCurrentCycle
                                 ? "Plano atual"
-                                : "Alterar ciclo no Asaas"
-                            : "Selecionar e abrir Asaas"}
+                                : shouldRequestChange
+                                  ? "Solicitar alteracao"
+                                  : "Alterar ciclo no Asaas"
+                            : shouldRequestChange
+                              ? "Solicitar alteracao"
+                              : "Selecionar e abrir Asaas"}
                     </Button>
                   </div>
                 );
@@ -274,6 +357,91 @@ export function SubscriptionView({
       </div>
     </AdminShell>
   );
+}
+
+type PendingPlanChangeView = {
+  planId: PlanId;
+  billingCycle: BillingCycle;
+  requestedAt: string | null;
+};
+
+function shouldRequestPlanChange(
+  subscription: BusinessSubscriptionRecord | null,
+  planId: PlanId,
+  billingCycle: BillingCycle,
+  currentPlanId: PlanId,
+  currentBillingCycle: BillingCycle,
+) {
+  return isManagedActiveSubscription(subscription) && (planId !== currentPlanId || billingCycle !== currentBillingCycle);
+}
+
+function isManagedActiveSubscription(subscription: BusinessSubscriptionRecord | null) {
+  return (
+    subscription?.status === "active" &&
+    Boolean(subscription.provider === "asaas" || subscription.provider_subscription_id || subscription.provider_checkout_id)
+  );
+}
+
+function getPendingPlanChange(subscription: BusinessSubscriptionRecord | null): PendingPlanChangeView | null {
+  const metadata = subscription?.metadata;
+
+  if (!isRecord(metadata)) {
+    return null;
+  }
+
+  const change = metadata.pending_plan_change;
+
+  if (!isRecord(change) || getString(change.status) !== "requested") {
+    return null;
+  }
+
+  const planId = getString(change.requested_plan_id ?? change.plan_id);
+  const billingCycle = getString(change.requested_billing_cycle ?? change.billing_cycle);
+
+  if (!isPlanId(planId) || !isBillingCycle(billingCycle)) {
+    return null;
+  }
+
+  return {
+    planId,
+    billingCycle,
+    requestedAt: getString(change.requested_at),
+  };
+}
+
+function getBillingCycleLabel(billingCycle: BillingCycle) {
+  return billingCycle === "annual" ? "anual" : "mensal";
+}
+
+function getPeriodEndLabel(subscription: BusinessSubscriptionRecord | null) {
+  const label = formatDate(subscription?.current_period_ends_at ?? subscription?.renews_at);
+  return label ? ` (${label})` : "";
+}
+
+function formatDate(value: string | null | undefined) {
+  if (!value) {
+    return null;
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return null;
+  }
+
+  return new Intl.DateTimeFormat("pt-BR").format(date);
+}
+
+function isPlanId(value: string | null): value is PlanId {
+  return subscriptionPlans.some((plan) => plan.id === value);
+}
+
+function isBillingCycle(value: string | null): value is BillingCycle {
+  return value === "monthly" || value === "annual";
+}
+
+function getString(value: unknown) {
+  return typeof value === "string" && value.trim() ? value.trim() : null;
 }
 
 function getStoredCheckoutUrl(subscription: BusinessSubscriptionRecord | null) {

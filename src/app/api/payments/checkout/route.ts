@@ -76,19 +76,30 @@ export async function POST(request: Request) {
     .select(subscriptionSelect)
     .eq("business_id", business.id)
     .maybeSingle();
+  const typedCurrentSubscription = (currentSubscription as BusinessSubscriptionRecord | null) ?? null;
+
+  if (isManagedActiveSubscription(typedCurrentSubscription)) {
+    return NextResponse.json(
+      {
+        error:
+          "Sua assinatura ja esta ativa. Solicite a alteracao do plano para evitar criar uma segunda cobranca recorrente.",
+      },
+      { status: 409 },
+    );
+  }
 
   if (cpfCnpj && !isValidCpfCnpj(cpfCnpj)) {
     return NextResponse.json({ error: "Informe um CPF ou CNPJ válido para abrir o checkout do Asaas." }, { status: 400 });
   }
 
-  if (!cpfCnpj && !currentSubscription?.provider_customer_id) {
+  if (!cpfCnpj && !typedCurrentSubscription?.provider_customer_id) {
     return NextResponse.json({ error: "Informe um CPF ou CNPJ válido para abrir o checkout do Asaas." }, { status: 400 });
   }
 
-  const billingCycle = parsed.data.billingCycle ?? currentSubscription?.billing_cycle ?? "monthly";
+  const billingCycle = parsed.data.billingCycle ?? typedCurrentSubscription?.billing_cycle ?? "monthly";
   const plan = getSubscriptionPlan(parsed.data.planId);
   const priceCents = billingCycle === "annual" ? plan.annualPriceCents : plan.priceCents;
-  const nextDueDate = getNextDueDate(currentSubscription as BusinessSubscriptionRecord | null, billingCycle);
+  const nextDueDate = getNextDueDate(typedCurrentSubscription, billingCycle);
   const billingAddress = getAsaasBillingAddress(business.address);
 
   if (!billingAddress.postalCode) {
@@ -108,7 +119,7 @@ export async function POST(request: Request) {
         status: "pending",
         provider: "asaas",
         provider_payment_method: "checkout",
-        started_at: currentSubscription?.started_at ?? new Date().toISOString(),
+        started_at: typedCurrentSubscription?.started_at ?? new Date().toISOString(),
         renews_at: new Date(`${nextDueDate}T23:59:59.000Z`).toISOString(),
       },
       { onConflict: "business_id" },
@@ -127,7 +138,7 @@ export async function POST(request: Request) {
     const customerName = getAsaasCustomerName(business.name);
     const checkoutReturnToken = crypto.randomUUID();
     const asaasCustomerId = await getOrCreateAsaasCustomerId({
-      existingCustomerId: currentSubscription?.provider_customer_id,
+      existingCustomerId: typedCurrentSubscription?.provider_customer_id,
       name: customerName,
       cpfCnpj,
       email: user.email,
@@ -197,7 +208,7 @@ export async function POST(request: Request) {
     await restoreSubscriptionAfterCheckoutFailure(
       admin,
       preparedSubscription.id,
-      currentSubscription as BusinessSubscriptionRecord | null,
+      typedCurrentSubscription,
     );
 
     if (error instanceof AsaasApiError) {
@@ -206,6 +217,13 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ error: "Não foi possível criar o checkout do Asaas." }, { status: 500 });
   }
+}
+
+function isManagedActiveSubscription(subscription: BusinessSubscriptionRecord | null) {
+  return (
+    subscription?.status === "active" &&
+    Boolean(subscription.provider === "asaas" || subscription.provider_subscription_id || subscription.provider_checkout_id)
+  );
 }
 
 async function restoreSubscriptionAfterCheckoutFailure(

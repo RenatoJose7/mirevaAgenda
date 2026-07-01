@@ -86,8 +86,23 @@ O endpoint:
 - exige estabelecimento configurado;
 - exige que o usuario seja `owner`;
 - valida o plano escolhido;
+- bloqueia checkout novo quando ja existe assinatura ativa gerenciada pelo Asaas;
 - cria checkout recorrente no Asaas;
 - grava `provider=asaas`, `provider_checkout_id`, `provider_payment_method`, `provider_status` e metadados tecnicos na assinatura.
+
+Alteracao de plano:
+
+```txt
+PATCH /api/subscription
+```
+
+Regras:
+
+- assinatura sem cobranca ativa pode alterar plano/ciclo e seguir para checkout normalmente;
+- assinatura ativa gerenciada pelo Asaas nao abre novo checkout automaticamente;
+- mudanca de plano ou ciclo em assinatura ativa vira `metadata.pending_plan_change`;
+- a solicitacao pendente guarda plano atual, plano desejado, ciclo atual, ciclo desejado, usuario solicitante e `apply_timing=period_end`;
+- a aplicacao operacional deve ocorrer no fim do ciclo para evitar dupla cobranca recorrente.
 
 Webhook:
 
