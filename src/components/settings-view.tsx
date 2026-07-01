@@ -6,10 +6,13 @@ import {
   Building2,
   CheckCircle2,
   Clock3,
+  Copy,
   Eye,
+  Link2,
   Lock,
   Palette,
   Trash2,
+  type LucideIcon,
 } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -51,6 +54,20 @@ const schema = z.object({
 });
 
 type SettingsForm = z.infer<typeof schema>;
+
+function SummaryItem({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value: string }) {
+  return (
+    <div className="flex min-w-0 items-center gap-3 p-4">
+      <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
+        <Icon className="size-4" />
+      </span>
+      <div className="min-w-0">
+        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">{label}</p>
+        <p className="mt-1 truncate font-medium text-slate-950">{value}</p>
+      </div>
+    </div>
+  );
+}
 
 export function SettingsView({ business, currentPlanId }: { business: AppBusiness; currentPlanId: PlanId }) {
   const [theme, setTheme] = useState(business.theme_key || "mireva");
@@ -210,6 +227,45 @@ export function SettingsView({ business, currentPlanId }: { business: AppBusines
       businessLogoUrl={logoUrl}
       themeKey={visibleTheme}
     >
+      <div className="space-y-6">
+        <section className="overflow-hidden rounded-xl border border-primary/15 bg-white shadow-sm">
+          <div className="flex flex-col gap-5 border-b bg-secondary/45 p-5 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex min-w-0 items-center gap-4">
+              {logoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={logoUrl} alt={businessName} className="size-14 rounded-xl border object-cover shadow-sm" />
+              ) : (
+                <div className="grid size-14 place-items-center rounded-xl bg-primary text-lg font-semibold text-primary-foreground shadow-sm">
+                  {businessName.slice(0, 1).toUpperCase()}
+                </div>
+              )}
+              <div className="min-w-0">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Estabelecimento</p>
+                <h2 className="truncate text-2xl font-semibold text-slate-950">{businessName}</h2>
+                <p className="mt-1 truncate text-sm text-muted-foreground">{businessAddress || "Endereco nao informado"}</p>
+              </div>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full gap-2 sm:w-auto"
+              onClick={() => navigator.clipboard.writeText(`${window.location.origin}${publicBookingPath}`)}
+            >
+              <Copy className="size-4" />
+              Copiar link
+            </Button>
+          </div>
+          <div className="grid gap-0 divide-y text-sm sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+            <SummaryItem icon={Link2} label="Link publico" value={publicBookingPath} />
+            <SummaryItem icon={Palette} label="Tema" value={selected.name} />
+            <SummaryItem
+              icon={mode === "automatic" ? CheckCircle2 : Clock3}
+              label="Confirmacao"
+              value={mode === "automatic" ? "Automatica" : "Manual"}
+            />
+          </div>
+        </section>
+
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.08fr)_minmax(360px,0.92fr)]">
         <Card className="border-primary/10 bg-white shadow-sm">
           <CardContent className="space-y-6 p-5 sm:p-6">
@@ -429,6 +485,7 @@ export function SettingsView({ business, currentPlanId }: { business: AppBusines
             </CardContent>
           </Card>
         </div>
+      </div>
       </div>
       <AlertDialog
         open={isDeleteDialogOpen}
