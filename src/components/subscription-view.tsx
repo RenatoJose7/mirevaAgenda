@@ -15,6 +15,7 @@ import {
   getSubscriptionPlan,
   subscriptionPlans,
   subscriptionStatusLabels,
+  type BillingCycle,
   type PlanId,
 } from "@/lib/plans";
 import { cn } from "@/lib/utils";
@@ -30,12 +31,15 @@ export function SubscriptionView({
 }) {
   const [subscription, setSubscription] = useState<BusinessSubscriptionRecord | null>(usage.subscription);
   const [currentPlanId, setCurrentPlanId] = useState<PlanId>(getSubscriptionPlan(usage.subscription?.plan_id).id);
+  const [selectedBillingCycle, setSelectedBillingCycle] = useState<BillingCycle>(
+    usage.subscription?.billing_cycle ?? "monthly",
+  );
   const [checkoutPlanId, setCheckoutPlanId] = useState<PlanId | null>(null);
   const [message, setMessage] = useState<{ type: "error" | "success"; text: string } | null>(
     getPaymentStatusMessage(paymentStatus),
   );
   const currentPlan = getSubscriptionPlan(currentPlanId);
-  const billingCycle = subscription?.billing_cycle ?? "monthly";
+  const currentBillingCycle = subscription?.billing_cycle ?? "monthly";
   const maxProfessionals = subscription?.max_professionals ?? currentPlan.maxProfessionals;
   const maxServices = subscription?.max_services ?? currentPlan.maxServices;
   const checkoutExpired = paymentStatus === "expirado";
@@ -47,7 +51,7 @@ export function SubscriptionView({
   const checkoutUrl = checkoutExpired || checkoutReturnedSuccess ? null : getStoredCheckoutUrl(subscription);
 
   async function handleCheckout(planId: PlanId) {
-    if (planId === currentPlanId && checkoutUrl) {
+    if (planId === currentPlanId && selectedBillingCycle === currentBillingCycle && checkoutUrl) {
       window.location.assign(checkoutUrl);
       return;
     }
@@ -59,7 +63,7 @@ export function SubscriptionView({
       const response = await fetch("/api/payments/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ planId, billingCycle }),
+        body: JSON.stringify({ planId, billingCycle: selectedBillingCycle }),
       });
       const payload = (await response.json().catch(() => null)) as {
         checkoutUrl?: string;
@@ -73,6 +77,7 @@ export function SubscriptionView({
 
       setSubscription(payload.subscription);
       setCurrentPlanId(payload.subscription.plan_id);
+      setSelectedBillingCycle(payload.subscription.billing_cycle);
       window.location.assign(payload.checkoutUrl);
     } catch (error) {
       setMessage({
@@ -103,7 +108,9 @@ export function SubscriptionView({
                   <div>
                     <p className="text-sm text-muted-foreground">Assinatura</p>
                     <h3 className="mt-1 text-2xl font-semibold text-slate-950">{currentPlan.name}</h3>
-                    <p className="mt-1 text-sm text-muted-foreground">{getPlanPriceLabel(currentPlan, billingCycle)}</p>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      {getPlanPriceLabel(currentPlan, currentBillingCycle)}
+                    </p>
                   </div>
                   <span className="w-fit rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
                     {statusLabel}
@@ -156,11 +163,35 @@ export function SubscriptionView({
 
         <Card>
           <CardContent className="space-y-5 p-5">
-            <SectionHeading
-              eyebrow="Planos"
-              title="Escolha o plano"
-              description="Ao selecionar outro plano, o checkout do Asaas abre automaticamente para concluir a alteração."
-            />
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+              <SectionHeading
+                eyebrow="Planos"
+                title="Escolha o plano"
+                description="Ao selecionar outro plano, o checkout do Asaas abre automaticamente para concluir a alteração."
+              />
+
+              <div className="w-full max-w-xs">
+                <p className="mb-2 text-xs font-semibold uppercase text-muted-foreground">Ciclo de cobrança</p>
+                <div className="grid grid-cols-2 rounded-lg border bg-white p-1 text-sm">
+                  {[
+                    ["monthly", "Mensal"],
+                    ["annual", "Anual"],
+                  ].map(([id, label]) => (
+                    <button
+                      key={id}
+                      type="button"
+                      onClick={() => setSelectedBillingCycle(id as BillingCycle)}
+                      className={cn(
+                        "rounded-md px-4 py-2 font-medium transition",
+                        selectedBillingCycle === id ? "bg-primary text-primary-foreground" : "text-muted-foreground",
+                      )}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
 
             <div className="grid gap-4 lg:grid-cols-3">
               {subscriptionPlans.map((plan) => {
@@ -168,8 +199,9 @@ export function SubscriptionView({
                 const isBusy = checkoutPlanId === plan.id;
                 const isOverProfessionals = usage.professionalsCount > plan.maxProfessionals;
                 const isOverServices = usage.servicesCount > plan.maxServices;
-                const canContinueCheckout = isCurrent && Boolean(checkoutUrl);
-                const canRegenerateCheckout = isCurrent && checkoutExpired;
+                const isCurrentCycle = isCurrent && selectedBillingCycle === currentBillingCycle;
+                const canContinueCheckout = isCurrentCycle && Boolean(checkoutUrl);
+                const canRegenerateCheckout = isCurrentCycle && checkoutExpired;
 
                 return (
                   <div
@@ -188,8 +220,12 @@ export function SubscriptionView({
                       )}
                     </div>
                     <p className="mt-2 min-h-12 text-sm text-muted-foreground">{plan.description}</p>
-                    <p className="mt-5 text-3xl font-semibold text-slate-950">{getPlanPriceLabel(plan, billingCycle)}</p>
-                    <p className="mt-2 text-xs text-muted-foreground">{getPlanCycleHelper(plan, billingCycle)}</p>
+                    <p className="mt-5 text-3xl font-semibold text-slate-950">
+                      {getPlanPriceLabel(plan, selectedBillingCycle)}
+                    </p>
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      {getPlanCycleHelper(plan, selectedBillingCycle)}
+                    </p>
 
                     <div className="mt-5 grid gap-3 text-sm text-slate-700">
                       {plan.features.map((feature) => (
@@ -209,8 +245,8 @@ export function SubscriptionView({
                     <Button
                       className="mt-auto"
                       type="button"
-                      variant={isCurrent && !canContinueCheckout ? "secondary" : "default"}
-                      disabled={(isCurrent && !canContinueCheckout && !canRegenerateCheckout) || checkoutPlanId !== null}
+                      variant={isCurrentCycle && !canContinueCheckout ? "secondary" : "default"}
+                      disabled={(isCurrentCycle && !canContinueCheckout && !canRegenerateCheckout) || checkoutPlanId !== null}
                       onClick={() => void handleCheckout(plan.id)}
                     >
                       {isBusy && <Loader2 className="size-4 animate-spin" />}
@@ -221,7 +257,9 @@ export function SubscriptionView({
                           : isCurrent
                             ? canRegenerateCheckout
                               ? "Gerar novo checkout"
-                              : "Plano atual"
+                              : isCurrentCycle
+                                ? "Plano atual"
+                                : "Alterar ciclo no Asaas"
                             : "Selecionar e abrir Asaas"}
                     </Button>
                   </div>
