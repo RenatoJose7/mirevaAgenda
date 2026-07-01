@@ -1,7 +1,19 @@
 "use client";
 
 import { useState } from "react";
-import { CheckCircle2, ClipboardCheck, CreditCard, ExternalLink, Loader2, WalletCards } from "lucide-react";
+import {
+  BadgeCheck,
+  CalendarClock,
+  CheckCircle2,
+  ClipboardCheck,
+  CreditCard,
+  ExternalLink,
+  Loader2,
+  RefreshCw,
+  Users,
+  WalletCards,
+  type LucideIcon,
+} from "lucide-react";
 import { AdminShell } from "@/components/admin-shell";
 import { AuthNotice } from "@/components/auth-notice";
 import { SectionHeading } from "@/components/section-heading";
@@ -47,8 +59,10 @@ export function SubscriptionView({
     paymentStatus === "sucesso" ||
     getCheckoutReturnStatus(subscription) === "sucesso" ||
     isPaidProviderStatus(subscription?.provider_status);
+  const isWaitingAutomaticConfirmation = checkoutReturnedSuccess && subscription?.status === "pending";
+  const showPageMessage = message && !(message.type === "success" && isWaitingAutomaticConfirmation);
   const statusLabel =
-    checkoutReturnedSuccess && subscription?.status === "pending"
+    isWaitingAutomaticConfirmation
       ? "Pagamento confirmado"
       : subscriptionStatusLabels[subscription?.status ?? "trialing"];
   const checkoutUrl = checkoutExpired || checkoutReturnedSuccess ? null : getStoredCheckoutUrl(subscription);
@@ -147,30 +161,37 @@ export function SubscriptionView({
       themeKey={business.theme_key}
     >
       <div className="space-y-6">
-        {message && <AuthNotice type={message.type} message={message.text} />}
+        {showPageMessage && <AuthNotice type={message.type} message={message.text} />}
 
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)]">
-          <Card className="bg-white">
+          <Card className="border-primary/10 bg-white shadow-sm">
             <CardContent className="space-y-5 p-5 sm:p-6">
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                <SectionHeading title="Plano atual" icon={CreditCard} />
+              <div className="flex flex-col gap-4 border-b border-slate-100 pb-5 sm:flex-row sm:items-start sm:justify-between">
+                <SectionHeading
+                  title="Plano atual"
+                  icon={CreditCard}
+                  description="Resumo da assinatura e da proxima cobranca."
+                />
                 <span
                   className={cn(
-                    "w-fit rounded-full px-3 py-1 text-xs font-semibold",
+                    "inline-flex w-fit items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold",
                     getStatusBadgeClass(subscription, checkoutReturnedSuccess),
                   )}
                 >
+                  <BadgeCheck className="size-3.5" />
                   {statusLabel}
                 </span>
               </div>
 
               <div className="grid gap-3 md:grid-cols-3">
                 <SummaryTile
+                  icon={BadgeCheck}
                   label="Plano"
                   value={currentPlan.name}
                   helper={getPlanPriceLabel(currentPlan, currentBillingCycle)}
                 />
                 <SummaryTile
+                  icon={RefreshCw}
                   label="Ciclo"
                   value={getBillingCycleTitle(currentBillingCycle)}
                   helper={getPlanCycleHelper(currentPlan, currentBillingCycle)}
@@ -182,7 +203,7 @@ export function SubscriptionView({
                 />
               </div>
 
-              {checkoutReturnedSuccess && subscription?.status === "pending" && (
+              {isWaitingAutomaticConfirmation && (
                 <div className="flex gap-3 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
                   <CheckCircle2 className="mt-0.5 size-4 shrink-0" />
                   <p>
@@ -221,11 +242,22 @@ export function SubscriptionView({
             </CardContent>
           </Card>
 
-          <Card className="bg-white">
+          <Card className="border-primary/10 bg-white shadow-sm">
             <CardContent className="space-y-5 p-5 sm:p-6">
-              <SectionHeading title="Uso do plano" icon={WalletCards} />
+              <div className="border-b border-slate-100 pb-5">
+                <SectionHeading
+                  title="Uso do plano"
+                  icon={WalletCards}
+                  description="Acompanhe os limites disponiveis neste plano."
+                />
+              </div>
               <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
-                <UsageTile label="Profissionais" current={usage.professionalsCount} limit={maxProfessionals} />
+                <UsageTile
+                  icon={Users}
+                  label="Profissionais"
+                  current={usage.professionalsCount}
+                  limit={maxProfessionals}
+                />
                 <UsageTile label="Serviços" current={usage.servicesCount} limit={maxServices} />
               </div>
             </CardContent>
@@ -375,23 +407,51 @@ export function SubscriptionView({
   );
 }
 
-function SummaryTile({ label, value, helper }: { label: string; value: string; helper?: string }) {
+function SummaryTile({
+  icon: Icon = CalendarClock,
+  label,
+  value,
+  helper,
+}: {
+  icon?: LucideIcon;
+  label: string;
+  value: string;
+  helper?: string;
+}) {
   return (
-    <div className="rounded-lg border bg-secondary/60 p-4">
+    <div className="rounded-lg border border-primary/15 bg-secondary/50 p-4">
+      <div className="mb-3 flex size-9 items-center justify-center rounded-lg bg-white text-primary shadow-sm">
+        <Icon className="size-4" />
+      </div>
       <p className="text-xs font-semibold uppercase text-muted-foreground">{label}</p>
-      <strong className="mt-2 block text-lg text-slate-950">{value}</strong>
+      <strong className="mt-2 block text-lg leading-tight text-slate-950">{value}</strong>
       {helper && <p className="mt-1 text-xs leading-5 text-muted-foreground">{helper}</p>}
     </div>
   );
 }
 
-function UsageTile({ label, current, limit }: { label: string; current: number; limit: number }) {
+function UsageTile({
+  icon: Icon = ClipboardCheck,
+  label,
+  current,
+  limit,
+}: {
+  icon?: LucideIcon;
+  label: string;
+  current: number;
+  limit: number;
+}) {
   const percentage = limit > 0 ? Math.min(100, Math.round((current / limit) * 100)) : 0;
 
   return (
-    <div className="rounded-lg border bg-secondary/60 p-4">
-      <div className="flex items-baseline justify-between gap-3">
-        <p className="text-sm text-muted-foreground">{label}</p>
+    <div className="rounded-lg border border-primary/15 bg-secondary/50 p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-white text-primary shadow-sm">
+            <Icon className="size-4" />
+          </span>
+          <p className="text-sm text-muted-foreground">{label}</p>
+        </div>
         <strong className="text-2xl text-slate-950">
           {current}/{limit}
         </strong>

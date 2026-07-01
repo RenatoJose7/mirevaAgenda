@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { ArrowRight, CalendarDays, LayoutDashboard, Sparkles } from "lucide-react";
 import { AppVersion } from "@/components/app-version";
 import { BrandMark } from "@/components/brand-mark";
@@ -7,7 +8,25 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
-export default function HomePage() {
+type HomePageProps = {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+};
+
+export default async function HomePage({ searchParams }: HomePageProps) {
+  const params = await searchParams;
+  const authCode = getFirstSearchParam(params.code);
+
+  if (authCode) {
+    const callbackParams = new URLSearchParams({ code: authCode });
+    const next = getFirstSearchParam(params.next);
+
+    if (next) {
+      callbackParams.set("next", next);
+    }
+
+    redirect(`/auth/callback?${callbackParams.toString()}`);
+  }
+
   return (
     <main className="mireva-grid min-h-screen px-4 py-6">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-8">
@@ -79,4 +98,8 @@ export default function HomePage() {
       </div>
     </main>
   );
+}
+
+function getFirstSearchParam(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] : value;
 }
