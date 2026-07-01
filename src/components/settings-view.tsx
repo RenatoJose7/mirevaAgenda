@@ -2,7 +2,15 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Eye, Lock, Settings, Trash2 } from "lucide-react";
+import {
+  Building2,
+  CheckCircle2,
+  Clock3,
+  Eye,
+  Lock,
+  Palette,
+  Trash2,
+} from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -61,6 +69,7 @@ export function SettingsView({ business, currentPlanId }: { business: AppBusines
   const canCustomizeTheme = currentPlanId !== "basic";
   const visibleTheme = canCustomizeTheme ? theme : "mireva";
   const selected = themes.find((item) => item.id === visibleTheme) ?? themes[0];
+  const publicBookingPath = `/agendar/${publicSlug}`;
   const form = useForm<SettingsForm>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -201,13 +210,19 @@ export function SettingsView({ business, currentPlanId }: { business: AppBusines
       businessLogoUrl={logoUrl}
       themeKey={visibleTheme}
     >
-      <div className="grid gap-6 lg:grid-cols-[1fr_0.9fr]">
-        <Card>
-          <CardContent className="space-y-5 p-5">
-            <SectionHeading title="Dados do estabelecimento" icon={Settings} />
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.08fr)_minmax(360px,0.92fr)]">
+        <Card className="border-primary/10 bg-white shadow-sm">
+          <CardContent className="space-y-6 p-5 sm:p-6">
+            <div className="border-b border-slate-100 pb-5">
+              <SectionHeading
+                title="Dados do estabelecimento"
+                description="Nome, contato, endereco e link publico usados no agendamento."
+                icon={Building2}
+              />
+            </div>
             {message && <AuthNotice type={message.type} message={message.text} />}
             <form id="settings-form" className="grid gap-4 sm:grid-cols-2" onSubmit={form.handleSubmit(handleSave)}>
-              <div className="space-y-2">
+              <div className="space-y-2 sm:col-span-2">
                 <Label htmlFor="business-name">Nome</Label>
                 <Input
                   id="business-name"
@@ -224,7 +239,16 @@ export function SettingsView({ business, currentPlanId }: { business: AppBusines
               </div>
               <div className="space-y-2">
                 <Label htmlFor="business-slug">Nome do link</Label>
-                <Input id="business-slug" {...form.register("slug")} />
+                <div className="flex overflow-hidden rounded-md border bg-white focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
+                  <span className="flex items-center border-r bg-secondary px-3 text-sm text-muted-foreground">
+                    /agendar/
+                  </span>
+                  <Input
+                    id="business-slug"
+                    className="border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+                    {...form.register("slug")}
+                  />
+                </div>
                 {form.formState.errors.slug && (
                   <p className="text-sm text-destructive">{form.formState.errors.slug.message}</p>
                 )}
@@ -250,29 +274,37 @@ export function SettingsView({ business, currentPlanId }: { business: AppBusines
               onRemove={handleLogoRemove}
               onError={(text) => setMessage({ type: "error", text })}
             />
-            <div className="rounded-lg border bg-white p-4 text-sm">
+            <div className="rounded-lg border border-primary/15 bg-secondary/40 p-4 text-sm">
               <p className="font-medium text-slate-950">Link público de agendamento</p>
-              <p className="mt-1 break-all text-muted-foreground">/agendar/{publicSlug}</p>
+              <p className="mt-1 break-all text-muted-foreground">{publicBookingPath}</p>
               <Button
-                className="mt-3"
+                className="mt-3 gap-2"
                 type="button"
                 variant="outline"
-                onClick={() => navigator.clipboard.writeText(`${window.location.origin}/agendar/${publicSlug}`)}
+                onClick={() => navigator.clipboard.writeText(`${window.location.origin}${publicBookingPath}`)}
               >
                 Copiar link público
               </Button>
             </div>
-            <Button type="submit" form="settings-form" disabled={isSubmitting}>
-              {isSubmitting ? "Salvando..." : "Salvar configurações"}
-            </Button>
+            <div className="flex justify-end border-t border-slate-100 pt-5">
+              <Button type="submit" form="settings-form" disabled={isSubmitting}>
+                {isSubmitting ? "Salvando..." : "Salvar configurações"}
+              </Button>
+            </div>
           </CardContent>
         </Card>
 
         <div className="space-y-6">
-          <Card>
-            <CardContent className="p-5">
-              <SectionHeading title="Temas prontos" />
-              <div className="relative mt-4">
+          <Card className="border-primary/10 bg-white shadow-sm">
+            <CardContent className="space-y-5 p-5 sm:p-6">
+              <div className="border-b border-slate-100 pb-5">
+                <SectionHeading
+                  title="Temas prontos"
+                  description="Aparencia aplicada a pagina publica de agendamento."
+                  icon={Palette}
+                />
+              </div>
+              <div className="relative">
                 <div className={cn("space-y-3", !canCustomizeTheme && "pointer-events-none select-none blur-[2px]")}>
                   {themes.map((option) => (
                     <button
@@ -285,18 +317,25 @@ export function SettingsView({ business, currentPlanId }: { business: AppBusines
                         }
                       }}
                       className={cn(
-                        "flex w-full items-center justify-between rounded-lg border bg-white p-3 text-left",
-                        visibleTheme === option.id && "border-primary ring-2 ring-primary/15",
+                        "flex w-full items-center justify-between gap-4 rounded-lg border border-primary/10 bg-secondary/30 p-3 text-left transition hover:border-primary/30 hover:bg-secondary/50",
+                        visibleTheme === option.id && "border-primary bg-white ring-2 ring-primary/15",
                       )}
                     >
                       <span>
                         <span className="font-medium text-slate-950">{option.name}</span>
                         <span className="block text-sm text-muted-foreground">{option.description}</span>
                       </span>
-                      <span className="flex gap-1">
-                        {option.colors.map((color) => (
-                          <span key={color} className="size-5 rounded-full border" style={{ backgroundColor: color }} />
-                        ))}
+                      <span className="flex shrink-0 items-center gap-2">
+                        {visibleTheme === option.id && <CheckCircle2 className="size-4 text-primary" />}
+                        <span className="flex gap-1">
+                          {option.colors.map((color) => (
+                            <span
+                              key={color}
+                              className="size-5 rounded-full border"
+                              style={{ backgroundColor: color }}
+                            />
+                          ))}
+                        </span>
                       </span>
                     </button>
                   ))}
@@ -320,10 +359,10 @@ export function SettingsView({ business, currentPlanId }: { business: AppBusines
             </CardContent>
           </Card>
 
-          <Card>
-            <CardContent className="space-y-4 p-5">
+          <Card className="border-primary/10 bg-white shadow-sm">
+            <CardContent className="space-y-5 p-5 sm:p-6">
               <SectionHeading title="Prévia pública" icon={Eye} />
-              <div className="rounded-lg border bg-white p-5">
+              <div className="rounded-lg border border-primary/15 bg-white p-5 shadow-sm">
                 <div className="mb-4 flex gap-2">
                   {selected.colors.map((color) => (
                     <span key={color} className="h-2 flex-1 rounded-full" style={{ backgroundColor: color }} />
@@ -353,9 +392,11 @@ export function SettingsView({ business, currentPlanId }: { business: AppBusines
                   <Button
                     key={id}
                     type="button"
+                    className="gap-2"
                     variant={mode === id ? "default" : "outline"}
                     onClick={() => setMode(id as "automatic" | "manual")}
                   >
+                    {id === "automatic" ? <CheckCircle2 className="size-4" /> : <Clock3 className="size-4" />}
                     {label}
                   </Button>
                 ))}
@@ -363,8 +404,8 @@ export function SettingsView({ business, currentPlanId }: { business: AppBusines
             </CardContent>
           </Card>
 
-          <Card className="border-destructive/25">
-            <CardContent className="space-y-4 p-5">
+          <Card className="border-destructive/20 bg-white shadow-sm">
+            <CardContent className="space-y-4 p-5 sm:p-6">
               <SectionHeading title="Conta" icon={Trash2} />
               {accountMessage && <AuthNotice type={accountMessage.type} message={accountMessage.text} />}
               <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-4">
