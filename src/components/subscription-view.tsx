@@ -42,8 +42,11 @@ export function SubscriptionView({
   const currentBillingCycle = subscription?.billing_cycle ?? "monthly";
   const maxProfessionals = subscription?.max_professionals ?? currentPlan.maxProfessionals;
   const maxServices = subscription?.max_services ?? currentPlan.maxServices;
-  const checkoutExpired = paymentStatus === "expirado";
-  const checkoutReturnedSuccess = paymentStatus === "sucesso" || getCheckoutReturnStatus(subscription) === "sucesso";
+  const checkoutExpired = paymentStatus === "expirado" || subscription?.provider_status === "CHECKOUT_EXPIRED";
+  const checkoutReturnedSuccess =
+    paymentStatus === "sucesso" ||
+    getCheckoutReturnStatus(subscription) === "sucesso" ||
+    isPaidProviderStatus(subscription?.provider_status);
   const statusLabel =
     checkoutReturnedSuccess && subscription?.status === "pending"
       ? "Pagamento confirmado"
@@ -274,7 +277,12 @@ export function SubscriptionView({
 }
 
 function getStoredCheckoutUrl(subscription: BusinessSubscriptionRecord | null) {
-  if (!subscription?.provider_checkout_id || subscription.provider_subscription_id) {
+  if (
+    !subscription?.provider_checkout_id ||
+    subscription.provider_subscription_id ||
+    subscription.status === "active" ||
+    isPaidProviderStatus(subscription.provider_status)
+  ) {
     return null;
   }
 
@@ -291,6 +299,15 @@ function getStoredCheckoutUrl(subscription: BusinessSubscriptionRecord | null) {
   }
 
   return checkout.link.startsWith("https://") ? checkout.link : null;
+}
+
+function isPaidProviderStatus(status: string | null | undefined) {
+  return (
+    status === "CHECKOUT_SUCCESS" ||
+    status === "CHECKOUT_PAID" ||
+    status === "PAYMENT_CONFIRMED" ||
+    status === "PAYMENT_RECEIVED"
+  );
 }
 
 function getCheckoutReturnStatus(subscription: BusinessSubscriptionRecord | null) {

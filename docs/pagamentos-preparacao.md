@@ -1,8 +1,8 @@
 # Mireva Agenda - Pagamentos com Asaas
 
-Esta etapa conecta o checkout recorrente do Asaas em ambiente sandbox. O sistema cria uma sessao de checkout, redireciona o usuario para o Asaas e salva o `provider_checkout_id` na assinatura do estabelecimento.
+Esta etapa conecta o checkout recorrente do Asaas em ambiente sandbox. O sistema cria uma sessao de checkout, redireciona o usuario para o Asaas, salva o `provider_checkout_id` na assinatura do estabelecimento e processa eventos recebidos pelo webhook.
 
-O processamento automatico por webhook ainda fica desativado ate a URL final ser cadastrada no Asaas.
+O processamento automatico por webhook deve ser ativado depois que a URL final for cadastrada no Asaas com um token proprio para o header `asaas-access-token`.
 
 ## Variaveis de ambiente
 
@@ -19,8 +19,9 @@ ASAAS_WEBHOOK_TOKEN=SEU_TOKEN_DE_WEBHOOK_ASAAS_APENAS_SERVER_SIDE
 
 Regras:
 
-- `PAYMENT_WEBHOOKS_ENABLED` deve continuar `false` ate o webhook ser cadastrado e validado.
+- `PAYMENT_WEBHOOKS_ENABLED` deve continuar `false` em desenvolvimento local se o webhook nao estiver cadastrado. Na Vercel, use `true` depois de cadastrar a URL no Asaas.
 - `ASAAS_API_KEY` e `ASAAS_WEBHOOK_TOKEN` sao server-side. Nunca use `NEXT_PUBLIC_`.
+- `ASAAS_WEBHOOK_TOKEN` deve ser o mesmo token configurado no Asaas para o header `asaas-access-token`. Nao use a chave de API como token de webhook.
 - `ASAAS_API_URL=https://api-sandbox.asaas.com` deve ser usado no sandbox.
 - `ASAAS_ENVIRONMENT=sandbox` deve ser usado para testes.
 - `ASAAS_ENVIRONMENT=production` deve ser usado apenas quando a cobranca real for aprovada.
@@ -50,7 +51,7 @@ Ela guarda:
 
 ## Webhooks
 
-A tabela `public.payment_webhook_events` foi criada para receber eventos futuros de gateway.
+A tabela `public.payment_webhook_events` registra os eventos recebidos do gateway.
 
 Ela guarda:
 
@@ -59,7 +60,7 @@ Ela guarda:
 - tipo do evento;
 - payload bruto em JSON;
 - headers em JSON;
-- hash/assinatura futura;
+- hash SHA-256 do corpo recebido;
 - status de processamento: `received`, `ignored`, `processed` ou `failed`;
 - relacao opcional com estabelecimento e assinatura.
 
@@ -68,6 +69,8 @@ Seguranca:
 - RLS esta ativo.
 - `anon` e `authenticated` nao recebem permissao.
 - Apenas `service_role` pode ler/escrever eventos.
+- O endpoint valida o header `asaas-access-token` com `ASAAS_WEBHOOK_TOKEN` antes de processar o payload.
+- Eventos repetidos com o mesmo `provider_event_id` sao tratados de forma idempotente.
 
 ## Endpoints
 
@@ -86,7 +89,7 @@ O endpoint:
 - cria checkout recorrente no Asaas;
 - grava `provider=asaas`, `provider_checkout_id`, `provider_payment_method`, `provider_status` e metadados tecnicos na assinatura.
 
-Webhook reservado:
+Webhook:
 
 ```txt
 POST /api/payments/webhook
@@ -94,11 +97,20 @@ GET /api/payments/webhook
 ```
 
 Com `PAYMENT_WEBHOOKS_ENABLED=false`, o `POST` responde como desativado e nao processa nada.
-Com `PAYMENT_WEBHOOKS_ENABLED=true`, o endpoint ainda retorna `501` ate a etapa de processamento dos eventos do Asaas.
+Com `PAYMENT_WEBHOOKS_ENABLED=true`, o endpoint valida o token, registra o evento em `payment_webhook_events` e atualiza a assinatura quando encontra o estabelecimento correspondente.
+
+Eventos processados:
+
+- `PAYMENT_CONFIRMED`, `PAYMENT_RECEIVED` e `CHECKOUT_PAID`: ativam a assinatura.
+- `SUBSCRIPTION_CREATED` e `SUBSCRIPTION_UPDATED` com status externo `ACTIVE`: ativam ou atualizam a assinatura.
+- `PAYMENT_OVERDUE` e `PAYMENT_CREDIT_CARD_CAPTURE_REFUSED`: marcam como `past_due`.
+- `SUBSCRIPTION_INACTIVATED` e `SUBSCRIPTION_DELETED`: marcam como `canceled`.
+- `PAYMENT_REFUNDED` e `PAYMENT_CHARGEBACK_REQUESTED`: marcam como `past_due`.
 
 ## Proximo passo
 
 - Cadastrar a URL `https://SEU_DOMINIO/api/payments/webhook` no painel do Asaas.
 - Definir `ASAAS_WEBHOOK_TOKEN` no Asaas e na Vercel.
-- Ativar `PAYMENT_WEBHOOKS_ENABLED=true`.
-- Processar eventos de pagamento para atualizar `status`, `provider_subscription_id`, `renews_at` e inadimplencia.
+- Ativar `PAYMENT_WEBHOOKS_ENABLED=true` na Vercel.
+- Habilitar eventos de pagamento, assinatura e checkout no webhook do Asaas.
+- Fazer um pagamento sandbox e confirmar que `business_subscriptions.status` muda para `active`.
